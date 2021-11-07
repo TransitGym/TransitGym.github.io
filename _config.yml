@@ -1,6 +1,6 @@
 title: Transit Gym
 logo: /assets/img/logo.png
-description: Website for transit gym project
+description: Reinforcement learning for transit control
 show_downloads: true
 google_analytics:
 theme: jekyll-theme-minimal
