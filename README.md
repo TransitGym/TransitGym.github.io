@@ -4,5 +4,5 @@
 
 *TransitGym is a prjocet developed for promoting transit operation with machine learning, especially on transit control based on multi-agent reinforcement learning*
 
-![ProjectLogo](logo.png)
+![ProjectLogo](logo.png =250x250)
 
