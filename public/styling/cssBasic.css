@@ -309,14 +309,14 @@
   z-index: 1;
 }
 
-#tutorial {
+#welcome {
   position: absolute;
   z-index: 3;
-  background-color: rgba(255, 255, 255, 1);
-  width: 50%;
-  height: 70%;
+  background-color: rgba(255, 250, 255, 1);
+  width: 55%;
+  height: 50%;
   border: 2px solid #34495e;
-  border-radius: 4px;
+  border-radius: 12px;
   text-align: center;
   float: right;
   margin-left: auto;
@@ -349,7 +349,7 @@
   color: #ffffff;
   background-color: #1abc9c;
   position: absolute;
-  left: 2%;
+  left: 45%;
   bottom: 2%;
 }
 
@@ -383,19 +383,19 @@
   padding-top: 5px;
 }
 
-#tutorial > h3 {
+#welcome > h3 {
   padding-bottom: 5px;
 }
 
-#tutorial > h6 {
+#welcome > h6 {
   padding: 5px 20px 5px 20px;
 }
 
-#tutorial > p {
+#welcome > p {
   padding: 5px 20px 5px 20px;
 }
 
-#tutorial > ul li {
+#welcome > ul li {
   list-style: none;
   padding-bottom: 5px;
   padding-right: 40px;
@@ -428,7 +428,7 @@
   margin-right: 5px;
 }
 
-/*#tutorial {
+/*#welcome {
   position: absolute;
   color: red;
   height: 50px;

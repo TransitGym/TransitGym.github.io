@@ -1,9 +1,9 @@
 <html>
   <head>
-    <title>Bus Holding with MARL</title>
+    <title>Bus Holding Control Visualizer</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <link id="cssTheme" rel="stylesheet" href="public/styling/cssBasic.css"/>
-    <link rel="shortcut icon" type="image/png" href="public/styling/c_icon.png"/>
+    <link rel="shortcut icon" type="image/png" href="assets/img/favicon.ico"/>
   </head>
   <body>
     <div id='navbarDiv'>
@@ -17,10 +17,10 @@
              <a class="dropdown-toggle" data-toggle="dropdown" href="#">Agents
              <span class="caret"></span></a>
              <ul class="dropdown-menu">
-               <li id='DDPG'><a href="#">DDPG</a></li>
-               <li id='MADDPG'><a href="#">MADDPG</a></li>
-               <li id='CAAC'><a href="#">CAAC</a></li>
-               <li id='IQNC-M'><a href="#">IQNC-M</a></li>
+               <li id='startButtonDijkstra'><a href="#">Dijkstra's Algorithm</a></li>
+               <li id='startButtonAStar2'><a href="#">A* Search</a></li>
+               <li id='startButtonGreedy'><a href="#">Greedy Best-first Search</a></li>
+               <li id='startButtonAStar'><a href="#">Swarm Algorithm</a></li>
                <li id='startButtonAStar3'><a href="#">Convergent Swarm Algorithm</a></li>
                <li id='startButtonBidirectional'><a href="#">Bidirectional Swarm Algorithm</a></li>
                <li id='startButtonBFS'><a href="#">Breadth-first Search</a></li>
@@ -28,13 +28,13 @@
              </ul>
            </li>
            <li class="dropdown">
-             <a class="dropdown-toggle" data-toggle="dropdown" href="#">Scenarios
+             <a class="dropdown-toggle" data-toggle="dropdown" href="#">Mazes &amp; Patterns
              <span class="caret"></span></a>
              <ul class="dropdown-menu">
-               <li id='startButtonCreateMazeTwo'><a href="#">Basic Single Line</a></li>
-               <li id='startButtonCreateMazeThree'><a href="#">Basic Multi-Line</a></li>
-               <li id='startButtonCreateMazeFour'><a href="#">Robust to demand uncertainty</a></li>
-               <li id='startButtonCreateMazeOne'><a href="#">Robust to traffic state uncertainty</a></li>
+               <li id='startButtonCreateMazeTwo'><a href="#">Recursive Division</a></li>
+               <li id='startButtonCreateMazeThree'><a href="#">Recursive Division (vertical skew)</a></li>
+               <li id='startButtonCreateMazeFour'><a href="#">Recursive Division (horizontal skew)</a></li>
+               <li id='startButtonCreateMazeOne'><a href="#">Basic Random Maze</a></li>
                <li id='startButtonCreateMazeWeights'><a href="#">Basic Weight Maze</a></li>
                <li id='startStairDemonstration'><a href="#">Simple Stair Pattern</a></li>
              </ul>
@@ -57,7 +57,11 @@
        </div>
      </nav>
    </div>
-
+    <div id="welcome">
+      <h3>Welcome to Bus Holding Control Visualizer</h3>
+      <h6>This website is to visualize bus trajectories under different control policies.</h6>
+      <button id="skipButton" class="btn btn-default navbar-btn" type="button">Begin</button>
+    </div>
     <div id='mainGrid'>
       <div id='mainText'>
         <ul>
@@ -79,7 +83,7 @@
             <div class="wall"></div>Wall Node</li>
         </ul>
       </div>
-      <div id="algorithmDescriptor">Pick an algorithm and visualize it!</div>
+      <div id="algorithmDescriptor">Pick an agent and scenario</div>
       <table id='board'/>
     </div>
   </body>
