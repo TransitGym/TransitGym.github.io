@@ -442,7 +442,7 @@ Board.prototype.clearPath = function(clickedButton) {
 
   document.getElementById("startButtonStart").onclick = () => {
     if (!this.currentAlgorithm) {
-      document.getElementById("startButtonStart").innerHTML = '<button class="btn btn-default navbar-btn" type="button">Pick an Algorithm!</button>'
+      document.getElementById("startButtonStart").innerHTML = '<button class="btn btn-default navbar-btn" type="button">Pick an Agent!</button>'
     } else {
       this.clearPath("clickedButton");
       this.toggleButtons();
@@ -856,7 +856,7 @@ Board.prototype.toggleButtons = function() {
     }
 
     document.getElementById("startButtonAStar2").onclick = () => {
-      document.getElementById("startButtonStart").innerHTML = '<button id="actualStartButton" class="btn btn-default navbar-btn" type="button">Visualize A*!</button>'
+      document.getElementById("startButtonStart").innerHTML = '<button id="actualStartButton" class="btn btn-default navbar-btn" type="button">Visualize DDPG!</button>'
       this.currentAlgorithm = "astar";
       this.currentHeuristic = "poweredManhattanDistance"
       this.changeStartNodeImages();

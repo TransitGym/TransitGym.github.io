@@ -1,8 +1,26 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function e(t,n,r)
+{function s(o,u)
+{if(!n[o])
+{if(!t[o])
+{var a=typeof require=="function"&&require;
+if(!u&&a)return a(o,!0);if(i)return i(o,!0);
+var f=new Error("Cannot find module '"+o+"'");
+throw f.code="MODULE_NOT_FOUND",f}
+
+var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}
+return n[o].exports}
+var i=typeof require=="function"&&require;
+for(var o=0;o<r.length;o++)
+    s(r[o]);
+return s}
+)
+    
+({1:[function(require,module,exports){
 const weightedSearchAlgorithm = require("../pathfindingAlgorithms/weightedSearchAlgorithm");
 const unweightedSearchAlgorithm = require("../pathfindingAlgorithms/unweightedSearchAlgorithm");
 
 function launchAnimations(board, success, type, object, algorithm, heuristic) {
+
   let nodes = object ? board.objectNodesToAnimate.slice(0) : board.nodesToAnimate.slice(0);
   let speed = board.speed === "fast" ?
     0 : board.speed === "average" ?
@@ -671,7 +689,7 @@ Board.prototype.drawShortestPathTimeout = function(targetNodeId, startNodeId, ty
         return;
       }
       timeout(index + 1);
-    }, 40)
+    }, 40) // node location update speed
   }
 
 
@@ -760,7 +778,7 @@ Board.prototype.clearPath = function(clickedButton) {
 
   document.getElementById("startButtonStart").onclick = () => {
     if (!this.currentAlgorithm) {
-      document.getElementById("startButtonStart").innerHTML = '<button class="btn btn-default navbar-btn" type="button">Pick an Algorithm!</button>'
+      document.getElementById("startButtonStart").innerHTML = '<button class="btn btn-default navbar-btn" type="button">Pick an Agent!</button>'
     } else {
       this.clearPath("clickedButton");
       this.toggleButtons();
@@ -1432,7 +1450,7 @@ window.onkeyup = (e) => {
 }
 
 },{"./animations/launchAnimations":1,"./animations/launchInstantAnimations":2,"./animations/mazeGenerationAnimations":3,"./getDistance":5,"./mazeAlgorithms/otherMaze":6,"./mazeAlgorithms/otherOtherMaze":7,"./mazeAlgorithms/recursiveDivisionMaze":8,"./mazeAlgorithms/simpleDemonstration":9,"./mazeAlgorithms/stairDemonstration":10,"./mazeAlgorithms/weightsDemonstration":11,"./node":12,"./pathfindingAlgorithms/astar":13,"./pathfindingAlgorithms/bidirectional":14,"./pathfindingAlgorithms/unweightedSearchAlgorithm":15,"./pathfindingAlgorithms/weightedSearchAlgorithm":16}],5:[function(require,module,exports){
-function getDistance(nodeOne, nodeTwo) {
+function getDistance(nodeOne, nodeTwo) { 
   let currentCoordinates = nodeOne.id.split("-");
   let targetCoordinates = nodeTwo.id.split("-");
   let x1 = parseInt(currentCoordinates[0]);
@@ -1911,6 +1929,7 @@ module.exports = Node;
 
 },{}],13:[function(require,module,exports){
 function astar(nodes, start, target, nodesToAnimate, boardArray, name, heuristic) {
+    readTrajectory('ddpg')
   if (!start || !target || start === target) {
     return false;
   }
@@ -1920,6 +1939,32 @@ function astar(nodes, start, target, nodesToAnimate, boardArray, name, heuristic
   let unvisitedNodes = Object.keys(nodes);
   while (unvisitedNodes.length) {
     let currentNode = closestNode(nodes, unvisitedNodes);
+
+    while (currentNode.status === "wall" && unvisitedNodes.length) {
+      currentNode = closestNode(nodes, unvisitedNodes)
+    }
+    if (currentNode.distance === Infinity) return false;
+    nodesToAnimate.push(currentNode);
+    currentNode.status = "visited"; 
+    if (currentNode.id === target) {
+      return "success!";
+    }
+    updateNeighbors(nodes, currentNode, boardArray, target, name, start, heuristic);
+  }
+
+}
+
+function ddpg(nodes, start, target, nodesToAnimate, boardArray, name, heuristic) {
+  if (!start || !target || start === target) {
+    return false;
+  }
+  nodes[start].distance = 0;
+  nodes[start].totalDistance = 0;
+  nodes[start].direction = "up";
+  let unvisitedNodes = Object.keys(nodes);
+  while (unvisitedNodes.length) {
+    let currentNode = closestNode(nodes, unvisitedNodes);
+
     while (currentNode.status === "wall" && unvisitedNodes.length) {
       currentNode = closestNode(nodes, unvisitedNodes)
     }
@@ -1931,6 +1976,7 @@ function astar(nodes, start, target, nodesToAnimate, boardArray, name, heuristic
     }
     updateNeighbors(nodes, currentNode, boardArray, target, name, start, heuristic);
   }
+
 }
 
 function closestNode(nodes, unvisitedNodes) {
@@ -1948,6 +1994,22 @@ function closestNode(nodes, unvisitedNodes) {
   }
   unvisitedNodes.splice(index, 1);
   return currentClosest;
+}
+ 
+// read csv (trajectory file)
+function readTrajectory(agent){
+    if (agent==='ddpg'){
+        
+        var request = new XMLHttpRequest();
+        request.open("GET", "./public/browser/data/SG_22_1_2212.csv", false);
+        request.send(null);
+        var returnValue = request.responseText;
+ 
+        
+    } 
+    console.log('sss');
+    console.log(returnValue);
+    return returnValue
 }
 
 function updateNeighbors(nodes, node, boardArray, target, name, start, heuristic) {
@@ -2675,7 +2737,10 @@ module.exports = unweightedSearchAlgorithm;
 const astar = require("./astar");
 
 function weightedSearchAlgorithm(nodes, start, target, nodesToAnimate, boardArray, name, heuristic) {
-  if (name === "astar") return astar(nodes, start, target, nodesToAnimate, boardArray, name)
+  if (name === "astar") {
+
+      return astar(nodes, start, target, nodesToAnimate, boardArray, name)
+  }
   if (!start || !target || start === target) {
     return false;
   }
