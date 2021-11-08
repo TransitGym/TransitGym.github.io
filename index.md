@@ -11,5 +11,6 @@ Inspire by the gym from openAI, we also want to build a project to advocate rein
 
 Here is an [lovely example](https://setosa.io/bus/) by [Lewis Lehe](https://twitter.com/lewislehe).
 
-[Bus holding control with MARL](./_layouts/visualize.md)
+[Bus holding control with MARL](https://TransitGym.github.io/_layouts/visualize.html)
 
+<a href="https://TransitGym.github.io/_layouts/visualize.html">Page 2</a>
