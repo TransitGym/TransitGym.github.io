@@ -10,8 +10,9 @@ agents to gain intelligient decision making abiltiy to deal with real-world task
 Within the scheme of RL, the agents draws a trajectory from the environment by recursively taking an action
 and observing a new states then collects rewards from the trajectory. RL allows agents to learn from this kind of interaction to gain maximum cumulative reward.
 
-![RL diagram](assets/img/RL_diagram.png)
-*RL scheme from wiki*
+|![RL diagram](assets/img/RL_diagram.png)|
+|:--:| 
+| *RL diagram from wiki* |
 
 The contrable apparatues in intelligient transportation system (ITS) appear in a vast number and are distributed in a wide
 geographic area, which provides a promising research and application area to develop RL techniques.
