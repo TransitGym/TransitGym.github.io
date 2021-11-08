@@ -15,7 +15,9 @@ and observing a new states then collects rewards from the trajectory. RL allows 
 The contrable apparatues in intelligient transportation system (ITS) appear in a vast number and are distributed in a wide
 geographic area, which provides a promising research and application area to develop RL techniques.
 In this project, we want to demonstrate the performance of RL based techniques in transit control domain.
-In particular we want to advaocate the potential of multi-agent reinforcement learning (MARL) to improve the efficiency of transit system
+In particular we want to advaocate the potential of multi-agent reinforcement learning (MARL) to improve the efficiency of transit system.
+
+
 ## Bus bunching
 
 Here is an [lovely example](https://setosa.io/bus/) by [Lewis Lehe](https://twitter.com/lewislehe).
