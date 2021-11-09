@@ -1996,12 +1996,19 @@ function closestNode(nodes, unvisitedNodes) {
   unvisitedNodes.splice(index, 1);
   return currentClosest;
 }
- 
+
+const trajectoryPath = "https://raw.githubusercontent.com/TransitGym/TransitGym.github.io/master/public/browser/data/"
+const buslist = [2257,5602,6259,10426,7589,5618,7559,20342,2213,2212,2258,5604,5603,16223,6260,10427,7590,10428,5619,7560,20344,20343,2214,2259,5605,16224,6261,10429,7591,5620,7561,20345,2215,2260,5606,16225,6263,6262,7592,5621,7562,20346,2216,2261,5607,16226,6264,10431,7593,5622,7563,2217,2262,5608,16227,6265,10432,7594,5623];
+
+//const getDistance = require("./getDistance");
 // read csv (trajectory file)
 function readTrajectory(agent){
     if (agent==='ddpg'){
+        const data = $.get(trajectoryPath+"visddpg/"+"SG_22_1_"+buslist[0]+".csv");
+        var data_arr = $.csv.toArrays(data);
+        console.log(data_arr);
         $.ajax({
-                url: "https://gist.githubusercontent.com/d3noob/fa0f16e271cb191ae85f/raw/bf896176236341f56a55b36c8fc40e32c73051ad/treedata.csv",
+                url: trajectoryPath+"visddpg/"+"SG_22_1_"+buslist[0]+".csv",
                 dataType: 'text',
                 cache: false
          }).done(function(csvAsString){
