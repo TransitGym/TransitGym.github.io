@@ -1945,7 +1945,8 @@ function astar(nodes, start, target, nodesToAnimate, boardArray, name, heuristic
     }
     if (currentNode.distance === Infinity) return false;
     nodesToAnimate.push(currentNode);
-    currentNode.status = "visited"; 
+    currentNode.status = "visited";
+    console.log(currentNode.direction)
     if (currentNode.id === target) {
       return "success!";
     }
@@ -1999,17 +2000,16 @@ function closestNode(nodes, unvisitedNodes) {
 // read csv (trajectory file)
 function readTrajectory(agent){
     if (agent==='ddpg'){
-        
-        var request = new XMLHttpRequest();
-        request.open("GET", "./public/browser/data/SG_22_1_2212.csv", false);
-        request.send(null);
-        var returnValue = request.responseText;
- 
+        $.ajax({
+                url: "https://gist.githubusercontent.com/d3noob/fa0f16e271cb191ae85f/raw/bf896176236341f56a55b36c8fc40e32c73051ad/treedata.csv",
+                dataType: 'text',
+                cache: false
+         }).done(function(csvAsString){
+                console.log('Success');
+         });
         
     } 
-    console.log('sss');
-    console.log(returnValue);
-    return returnValue
+    return 
 }
 
 function updateNeighbors(nodes, node, boardArray, target, name, start, heuristic) {

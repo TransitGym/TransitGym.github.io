@@ -4,8 +4,30 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <link id="cssTheme" rel="stylesheet" href="public/styling/cssBasic.css"/>
     <link rel="shortcut icon" type="image/png" href="assets/img/favicon.ico"/>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
   </head>
   <body>
+  
+  <script>
+    d3.csv("https://gist.githubusercontent.com/d3noob/fa0f16e271cb191ae85f/raw/bf896176236341f56a55b36c8fc40e32c73051ad/treedata.csv", function(data) {
+    for (var i = 0; i < data.length; i++) {
+        console.log(data[i]);
+        console.log(data[i]);
+    }
+    
+
+});
+
+    d3.csv("https://raw.githubusercontent.com/TransitGym/TransitGym.github.io/master/public/browser/data/SG_22_1_2212.csv", function(data) {
+    for (var i = 0; i < data.length; i++) {
+        console.log(data[i]);
+        console.log(data[i]);
+    }
+    
+
+});
+</script>
+
     <div id='navbarDiv'>
      <nav class="navbar navbar-inverse">
        <div class="container-fluid">
@@ -90,4 +112,5 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
   <script src='public/browser/bundle.js'></script>
+
 </html>
