@@ -32,8 +32,9 @@
       .attr("id", "visualization");
 
     const trajectoryPath = "https://raw.githubusercontent.com/TransitGym/TransitGym.github.io/master/public/browser/data/"
-    const busId = [2257,5602,6259,10426,7589,5618,7559,20342,2213,2212,2258,5604,5603,16223,6260,10427,7590,10428,5619,7560,20344,20343,2214,2259,5605,16224,6261,10429,7591,5620,7561,20345,2215,2260,5606,16225,6263,6262,7592,5621,7562,20346,2216,2261,5607,16226,6264,10431,7593,5622,7563,2217,2262,5608,16227,6265,10432,7594,5623];
-    busList =  {}
+    const busId = [2257,5602,];
+    /* 6259,10426,7589,5618,7559,20342,2213,2212,2258,5604,5603,16223,6260,10427,7590,10428,5619,7560,20344,20343,2214,2259,5605,16224,6261,10429,7591,5620,7561,20345,2215,2260,5606,16225,6263,6262,7592,5621,7562,20346,2216,2261,5607,16226,6264,10431,7593,5622,7563,2217,2262,5608,16227,6265,10432,7594,5623]; */
+    let busList = new Map();
     /* busId.map(function(b) {
         $.ajax({
           url: trajectoryPath+"visddpg/"+"SG_22_1_"+b+".csv",
@@ -44,8 +45,12 @@
      busList[b] = data;
      console.log(b);
      repeat(); });
-    });      */
-    $.ajax({
+    }); 
+         */
+
+
+    
+    /* $.ajax({
           url: trajectoryPath+"visddpg/"+"SG_22_1_"+busId[0]+".csv",
           dataType: 'text',
           cache: false
@@ -53,22 +58,24 @@
      traj = csvToArray(csvAsString)
      busList[busId[0]] = traj;
      console.log(busId[0]);
-     repeat(); })
+     repeat(); }) */
 
     // data is created inside the function so it is always unique
     let repeat = () => {
-        console.log(traj['loc'][0]);
-    const horizon = traj['time'].length - 1;
+    console.log(busList);
+    /* console.log(traj['loc'][0]); */
+    /* const horizon = traj['time'].length - 1; */
+    const horizon = 10;
     var x = d3.scaleLinear().domain([0, horizon]).range([0, w-10]);
-    var y = d3.scaleLinear().domain([0, 20000]).range([10, h - 10]);
+    var y = d3.scaleLinear().domain([0, 20]).range([0, 20]);
 
     var line = d3.line()
       .x(function(d,i) {return x(i);})
       .y(function(d) {return d;})
       .curve(d3.curveNatural)
 
-      /* var data = d3.range(11).map(function(){return Math.random()*10}) */
-      var data = d3.range(horizon).map(function(k){return traj['loc'][k]})
+      var data = d3.range(11).map(function(){return Math.random()*10})
+      /* var data = d3.range(horizon).map(function(k){return traj['loc'][k]}) */
       // Uncomment following line to clear the previously drawn line
       //svg.selectAll("path").remove();
 
@@ -92,6 +99,76 @@
           .attr("stroke-dashoffset", 0);
           /*.on("end", repeat);*/
     };
+ 
+    function readData(){
+        busId.map(function(b){
+        $.ajax({
+          url: trajectoryPath + "visddpg/" + "SG_22_1_" + b + ".csv",
+          dataType: 'text'
+   }).done(function(csvAsString){
+     traj = csvToArray(csvAsString)
+     busList[b] = traj;  })
+    })
+    }
+
+    /* var q = d3.queue()
+    .defer(function a(callback){
+      console.log("from a")
+      callback(null )
+    } )
+    .defer(function b(callback){
+      console.log("from b")
+      callback(null )
+    } )
+    .defer( function c(callback){
+      console.log("from c")
+      callback(null )
+    })
+    .awaitAll(function(error, results) {
+      if (error) throw error;
+      console.log(9);
+    }); */
+
+    /* function rndNum(callback){
+      t = d3.randomUniform(0,15)()
+      console.log(t);
+    callback(null, t);
+}
+d3.queue()
+    .defer(rndNum) //result1
+    .defer(rndNum) //result2
+    .defer(rndNum) //result3
+    .awaitAll(function(error, results) {
+      if (error) throw error;
+      console.log(9);
+    });  */
+ 
+    /* var readDataPromise = new Promise(readData);
+    readDataPromise.then(repeat()); */
+
+    var q = d3.queue();  
+    dataSources = busId.map(function(b){return trajectoryPath + "visddpg/" + "SG_22_1_" + b + ".csv"});
+    busId.forEach(function (source) {
+    q.defer(function (callback) {
+        d3.csv(trajectoryPath + "visddpg/" + "SG_22_1_" + source + ".csv", function(data){
+            var traj = { 'time': [],'loc': [],'op': [] };
+             for (var i = 0; i < data.length; i++) {
+                traj['time'].push(data[i].time); 
+                traj['loc'].push(data[i].loc); 
+                traj['op'].push(data[i].op); 
+            }
+             busList[source] = traj; }); 
+            callback();
+    });
+});
+  
+// Wait for all requests to be completed:
+    q.awaitAll(function (error, results) {
+      if (error) throw error;
+      console.log(Object.keys(busList).length );
+        repeat();
+    }); 
+
     /* repeat(); */
     function csvToArray(str, delimiter = ",") {
         const headers = str.slice(0, str.indexOf("\n")).split(delimiter);
