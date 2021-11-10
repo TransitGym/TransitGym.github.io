@@ -24,4 +24,4 @@ In particular we want to advaocate the potential of multi-agent reinforcement le
 
 Here is an [lovely example](https://setosa.io/bus/) by [Lewis Lehe](https://twitter.com/lewislehe).
 
-[Bus holding control with MARL](./visualize.html)
+[Bus holding control with MARL](./vis.html)

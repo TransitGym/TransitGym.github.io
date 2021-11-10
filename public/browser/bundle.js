@@ -15,7 +15,8 @@ for(var o=0;o<r.length;o++)
 return s}
 )
     
-({1:[function(require,module,exports){
+(
+{1:[function(require,module,exports){
 const weightedSearchAlgorithm = require("../pathfindingAlgorithms/weightedSearchAlgorithm");
 const unweightedSearchAlgorithm = require("../pathfindingAlgorithms/unweightedSearchAlgorithm");
 
@@ -25,6 +26,7 @@ function launchAnimations(board, success, type, object, algorithm, heuristic) {
   let speed = board.speed === "fast" ?
     0 : board.speed === "average" ?
       100 : 500;
+
   let shortestNodes;
   function timeout(index) {
     setTimeout(function () {
@@ -99,6 +101,8 @@ function launchAnimations(board, success, type, object, algorithm, heuristic) {
       }
       timeout(index + 1);
     }, speed);
+    
+
   }
 
   function change(currentNode, previousNode, bidirectional) {
@@ -351,6 +355,7 @@ const bidirectional = require("./pathfindingAlgorithms/bidirectional");
 const getDistance = require("./getDistance");
 
 function Board(height, width) {
+
   this.height = height;
   this.width = width;
   this.start = null;
@@ -616,69 +621,27 @@ Board.prototype.drawShortestPathTimeout = function(targetNodeId, startNodeId, ty
   let currentNode;
   let secondCurrentNode;
   let currentNodesToAnimate;
+ 
 
-  if (board.currentAlgorithm !== "bidirectional") {
-    currentNode = board.nodes[board.nodes[targetNodeId].previousNode];
+ currentNode = board.nodes[board.nodes[targetNodeId].previousNode];
     if (object) {
       board.objectShortestPathNodesToAnimate.push("object");
       currentNodesToAnimate = board.objectShortestPathNodesToAnimate.concat(board.shortestPathNodesToAnimate);
     } else {
       currentNodesToAnimate = [];
       while (currentNode.id !== startNodeId) {
-        currentNodesToAnimate.unshift(currentNode);
+        currentNodesToAnimate.unshift(currentNode); //The unshift method inserts the given values to the beginning of an array-like object.
         currentNode = board.nodes[currentNode.previousNode];
       }
     }
-  } else {
-    if (board.middleNode !== board.target && board.middleNode !== board.start) {
-      currentNode = board.nodes[board.nodes[board.middleNode].previousNode];
-      secondCurrentNode = board.nodes[board.nodes[board.middleNode].otherpreviousNode];
-      if (secondCurrentNode.id === board.target) {
-        board.nodes[board.target].direction = getDistance(board.nodes[board.middleNode], board.nodes[board.target])[2];
-      }
-      if (object) {
-
-      } else {
-        currentNodesToAnimate = [];
-        board.nodes[board.middleNode].direction = getDistance(currentNode, board.nodes[board.middleNode])[2];
-        while (currentNode.id !== startNodeId) {
-          currentNodesToAnimate.unshift(currentNode);
-          currentNode = board.nodes[currentNode.previousNode];
-        }
-        currentNodesToAnimate.push(board.nodes[board.middleNode]);
-        while (secondCurrentNode.id !== targetNodeId) {
-          if (secondCurrentNode.otherdirection === "left") {
-            secondCurrentNode.direction = "right";
-          } else if (secondCurrentNode.otherdirection === "right") {
-            secondCurrentNode.direction = "left";
-          } else if (secondCurrentNode.otherdirection === "up") {
-            secondCurrentNode.direction = "down";
-          } else if (secondCurrentNode.otherdirection === "down") {
-            secondCurrentNode.direction = "up";
-          }
-          currentNodesToAnimate.push(secondCurrentNode);
-          if (secondCurrentNode.otherpreviousNode === targetNodeId) {
-            board.nodes[board.target].direction = getDistance(secondCurrentNode, board.nodes[board.target])[2];
-          }
-          secondCurrentNode = board.nodes[secondCurrentNode.otherpreviousNode]
-        }
-    }
-  } else {
-    currentNodesToAnimate = [];
-    let target = board.nodes[board.target];
-    currentNodesToAnimate.push(board.nodes[target.previousNode], target);
-  }
-
-}
-
-
-  timeout(0);
+  timeout(0); // draw shortest-path(yellow)
 
   function timeout(index) {
+      
     if (!currentNodesToAnimate.length) currentNodesToAnimate.push(board.nodes[board.start]);
     setTimeout(function () {
       if (index === 0) {
-        shortestPathChange(currentNodesToAnimate[index]);
+        shortestPathChange(currentNodesToAnimate[index]); // draw shortest-path(yellow)
       } else if (index < currentNodesToAnimate.length) {
         shortestPathChange(currentNodesToAnimate[index], currentNodesToAnimate[index - 1]);
       } else if (index === currentNodesToAnimate.length) {
@@ -692,17 +655,15 @@ Board.prototype.drawShortestPathTimeout = function(targetNodeId, startNodeId, ty
     }, 40) // node location update speed
   }
 
-
-  function shortestPathChange(currentNode, previousNode, isActualTarget) {
+// each bus maintain an shortestPathChange?
+  function shortestPathChange(currentNode, previousNode, isActualTarget) {//tag
     if (currentNode === "object") {
       let element = document.getElementById(board.object);
       element.className = "objectTransparent";
     } else if (currentNode.id !== board.start) {
       if (currentNode.id !== board.target || currentNode.id === board.target && isActualTarget) {
         let currentHTMLNode = document.getElementById(currentNode.id);
-        if (type === "unweighted") {
-          currentHTMLNode.className = "shortest-path-unweighted";
-        } else {
+ 
           let direction;
           if (currentNode.relatesToObject && !currentNode.overwriteObjectRelation && currentNode.id !== board.target) {
             direction = "storedDirection";
@@ -721,7 +682,7 @@ Board.prototype.drawShortestPathTimeout = function(targetNodeId, startNodeId, ty
           } else {
             currentHTMLNode.className = "shortest-path";
           }
-        }
+       
       }
     }
     if (previousNode) {
@@ -1898,7 +1859,8 @@ function weightsDemonstration(board) {
 
 module.exports = weightsDemonstration;
 
-},{}],12:[function(require,module,exports){
+},{}],
+12:[function(require,module,exports){
 function Node(id, status) {
   this.id = id;
   this.status = status;
@@ -1927,9 +1889,10 @@ function Node(id, status) {
 
 module.exports = Node;
 
-},{}],13:[function(require,module,exports){
+},{}],
+13:[function(require,module,exports){
 function astar(nodes, start, target, nodesToAnimate, boardArray, name, heuristic) {
-    readTrajectory('ddpg')
+
   if (!start || !target || start === target) {
     return false;
   }
@@ -1937,6 +1900,7 @@ function astar(nodes, start, target, nodesToAnimate, boardArray, name, heuristic
   nodes[start].totalDistance = 0;
   nodes[start].direction = "up";
   let unvisitedNodes = Object.keys(nodes);
+  
   while (unvisitedNodes.length) {
     let currentNode = closestNode(nodes, unvisitedNodes);
 
@@ -1946,7 +1910,6 @@ function astar(nodes, start, target, nodesToAnimate, boardArray, name, heuristic
     if (currentNode.distance === Infinity) return false;
     nodesToAnimate.push(currentNode);
     currentNode.status = "visited";
-    console.log(currentNode.direction)
     if (currentNode.id === target) {
       return "success!";
     }
@@ -1998,25 +1961,44 @@ function closestNode(nodes, unvisitedNodes) {
 }
 
 const trajectoryPath = "https://raw.githubusercontent.com/TransitGym/TransitGym.github.io/master/public/browser/data/"
-const buslist = [2257,5602,6259,10426,7589,5618,7559,20342,2213,2212,2258,5604,5603,16223,6260,10427,7590,10428,5619,7560,20344,20343,2214,2259,5605,16224,6261,10429,7591,5620,7561,20345,2215,2260,5606,16225,6263,6262,7592,5621,7562,20346,2216,2261,5607,16226,6264,10431,7593,5622,7563,2217,2262,5608,16227,6265,10432,7594,5623];
+const busId = [2257,5602,6259,10426,7589,5618,7559,20342,2213,2212,2258,5604,5603,16223,6260,10427,7590,10428,5619,7560,20344,20343,2214,2259,5605,16224,6261,10429,7591,5620,7561,20345,2215,2260,5606,16225,6263,6262,7592,5621,7562,20346,2216,2261,5607,16226,6264,10431,7593,5622,7563,2217,2262,5608,16227,6265,10432,7594,5623];
 
 //const getDistance = require("./getDistance");
 // read csv (trajectory file)
 function readTrajectory(agent){
+    const busList = []
     if (agent==='ddpg'){
-        const data = $.get(trajectoryPath+"visddpg/"+"SG_22_1_"+buslist[0]+".csv");
-        var data_arr = $.csv.toArrays(data);
-        console.log(data_arr);
+     busId.map(function(b) {
         $.ajax({
-                url: trajectoryPath+"visddpg/"+"SG_22_1_"+buslist[0]+".csv",
-                dataType: 'text',
-                cache: false
-         }).done(function(csvAsString){
-                console.log('Success');
-         });
-        
+          url: trajectoryPath+"visddpg/"+"SG_22_1_"+b+".csv",
+          dataType: 'text',
+          cache: false
+   }).done(function(csvAsString){
+     data = csvToArray(csvAsString)
+     busList.push(csvAsString);
+     console.log(b); });
+    });     
     } 
-    return 
+    return busList
+}
+function csvToArray(str, delimiter = ",") {
+  const headers = str.slice(0, str.indexOf("\n")).split(delimiter);
+  const rows = str.slice(str.indexOf("\n") + 1).split("\n");
+  const data = headers.reduce(function(objects, head, index){
+      const values = rows.reduce(function(temp, row, i){
+      const value = parseFloat(row.split(delimiter)[index]);
+      if (i === 0){
+        temp = [value];
+      }
+      else{
+        temp.push(value);
+      }
+      return temp;
+      },{});
+      objects[head] = values;
+      return objects;
+  },{});
+  return data;
 }
 
 function updateNeighbors(nodes, node, boardArray, target, name, start, heuristic) {
@@ -2065,30 +2047,7 @@ function getNeighbors(id, nodes, boardArray) {
     potentialNeighbor = `${x.toString()}-${(y + 1).toString()}`
     if (nodes[potentialNeighbor].status !== "wall") neighbors.push(potentialNeighbor);
   }
-  // if (boardArray[x - 1] && boardArray[x - 1][y - 1]) {
-  //   potentialNeighbor = `${(x - 1).toString()}-${(y - 1).toString()}`
-  //   let potentialWallOne = `${(x - 1).toString()}-${y.toString()}`
-  //   let potentialWallTwo = `${x.toString()}-${(y - 1).toString()}`
-  //   if (nodes[potentialNeighbor].status !== "wall" && !(nodes[potentialWallOne].status === "wall" && nodes[potentialWallTwo].status === "wall")) neighbors.push(potentialNeighbor);
-  // }
-  // if (boardArray[x + 1] && boardArray[x + 1][y - 1]) {
-  //   potentialNeighbor = `${(x + 1).toString()}-${(y - 1).toString()}`
-  //   let potentialWallOne = `${(x + 1).toString()}-${y.toString()}`
-  //   let potentialWallTwo = `${x.toString()}-${(y - 1).toString()}`
-  //   if (nodes[potentialNeighbor].status !== "wall" && !(nodes[potentialWallOne].status === "wall" && nodes[potentialWallTwo].status === "wall")) neighbors.push(potentialNeighbor);
-  // }
-  // if (boardArray[x - 1] && boardArray[x - 1][y + 1]) {
-  //   potentialNeighbor = `${(x - 1).toString()}-${(y + 1).toString()}`
-  //   let potentialWallOne = `${(x - 1).toString()}-${y.toString()}`
-  //   let potentialWallTwo = `${x.toString()}-${(y + 1).toString()}`
-  //   if (nodes[potentialNeighbor].status !== "wall" && !(nodes[potentialWallOne].status === "wall" && nodes[potentialWallTwo].status === "wall")) neighbors.push(potentialNeighbor);
-  // }
-  // if (boardArray[x + 1] && boardArray[x + 1][y + 1]) {
-  //   potentialNeighbor = `${(x + 1).toString()}-${(y + 1).toString()}`
-  //   let potentialWallOne = `${(x + 1).toString()}-${y.toString()}`
-  //   let potentialWallTwo = `${x.toString()}-${(y + 1).toString()}`
-  //   if (nodes[potentialNeighbor].status !== "wall" && !(nodes[potentialWallOne].status === "wall" && nodes[potentialWallTwo].status === "wall")) neighbors.push(potentialNeighbor);
-  // }
+  
   return neighbors;
 }
 
@@ -2173,79 +2132,7 @@ function getDistance(nodeOne, nodeTwo) {
     } else if (nodeOne.direction === "down-left") {
       return [2.5, null, "right"];
     }
-  } /*else if (x2 < x1 && y2 < y1) {
-    if (nodeOne.direction === "up") {
-      return [1.5, ["f"], "up-left"];
-    } else if (nodeOne.direction === "right") {
-      return [2.5, ["l", "f"], "up-left"];
-    } else if (nodeOne.direction === "left") {
-      return [1.5, ["r", "f"], "up-left"];
-    } else if (nodeOne.direction === "down") {
-      return [2.5, ["r", "r", "f"], "up-left"];
-    } else if (nodeOne.direction === "up-right") {
-      return [2, null, "up-left"];
-    } else if (nodeOne.direction === "down-right") {
-      return [3, null, "up-left"];
-    } else if (nodeOne.direction === "up-left") {
-      return [1, null, "up-left"];
-    } else if (nodeOne.direction === "down-left") {
-      return [2, null, "up-left"];
-    }
-  } else if (x2 < x1 && y2 > y1) {
-    if (nodeOne.direction === "up") {
-      return [1.5, ["f"], "up-right"];
-    } else if (nodeOne.direction === "right") {
-      return [1.5, ["l", "f"], "up-right"];
-    } else if (nodeOne.direction === "left") {
-      return [2.5, ["r", "f"], "up-right"];
-    } else if (nodeOne.direction === "down") {
-      return [2.5, ["r", "r", "f"], "up-right"];
-    } else if (nodeOne.direction === "up-right") {
-      return [1, null, "up-right"];
-    } else if (nodeOne.direction === "down-right") {
-      return [2, null, "up-right"];
-    } else if (nodeOne.direction === "up-left") {
-      return [2, null, "up-right"];
-    } else if (nodeOne.direction === "down-left") {
-      return [3, null, "up-right"];
-    }
-  } else if (x2 > x1 && y2 > y1) {
-    if (nodeOne.direction === "up") {
-      return [2.5, ["f"], "down-right"];
-    } else if (nodeOne.direction === "right") {
-      return [1.5, ["l", "f"], "down-right"];
-    } else if (nodeOne.direction === "left") {
-      return [2.5, ["r", "f"], "down-right"];
-    } else if (nodeOne.direction === "down") {
-      return [1.5, ["r", "r", "f"], "down-right"];
-    } else if (nodeOne.direction === "up-right") {
-      return [2, null, "down-right"];
-    } else if (nodeOne.direction === "down-right") {
-      return [1, null, "down-right"];
-    } else if (nodeOne.direction === "up-left") {
-      return [3, null, "down-right"];
-    } else if (nodeOne.direction === "down-left") {
-      return [2, null, "down-right"];
-    }
-  } else if (x2 > x1 && y2 < y1) {
-    if (nodeOne.direction === "up") {
-      return [2.5, ["f"], "down-left"];
-    } else if (nodeOne.direction === "right") {
-      return [2.5, ["l", "f"], "down-left"];
-    } else if (nodeOne.direction === "left") {
-      return [1.5, ["r", "f"], "down-left"];
-    } else if (nodeOne.direction === "down") {
-      return [1.5, ["r", "r", "f"], "down-left"];
-    } else if (nodeOne.direction === "up-right") {
-      return [3, null, "down-left"];
-    } else if (nodeOne.direction === "down-right") {
-      return [2, null, "down-left"];
-    } else if (nodeOne.direction === "up-left") {
-      return [2, null, "down-left"];
-    } else if (nodeOne.direction === "down-left") {
-      return [1, null, "down-left"];
-    }
-  }*/
+  }
 }
 
 function manhattanDistance(nodeOne, nodeTwo) {
@@ -2374,30 +2261,6 @@ function updateNodeTwo(currentNode, targetNode, actualTargetNode, name, nodes, a
   }
 }
 
-function getNeighbors(id, nodes, boardArray) {
-  let coordinates = id.split("-");
-  let x = parseInt(coordinates[0]);
-  let y = parseInt(coordinates[1]);
-  let neighbors = [];
-  let potentialNeighbor;
-  if (boardArray[x - 1] && boardArray[x - 1][y]) {
-    potentialNeighbor = `${(x - 1).toString()}-${y.toString()}`
-    if (nodes[potentialNeighbor].status !== "wall") neighbors.push(potentialNeighbor);
-  }
-  if (boardArray[x + 1] && boardArray[x + 1][y]) {
-    potentialNeighbor = `${(x + 1).toString()}-${y.toString()}`
-    if (nodes[potentialNeighbor].status !== "wall") neighbors.push(potentialNeighbor);
-  }
-  if (boardArray[x][y - 1]) {
-    potentialNeighbor = `${x.toString()}-${(y - 1).toString()}`
-    if (nodes[potentialNeighbor].status !== "wall") neighbors.push(potentialNeighbor);
-  }
-  if (boardArray[x][y + 1]) {
-    potentialNeighbor = `${x.toString()}-${(y + 1).toString()}`
-    if (nodes[potentialNeighbor].status !== "wall") neighbors.push(potentialNeighbor);
-  }
-  return neighbors;
-}
 
 function getDistance(nodeOne, nodeTwo) {
   let currentCoordinates = nodeOne.id.split("-");
@@ -2507,157 +2370,6 @@ function manhattanDistance(nodeOne, nodeTwo) {
   let xChange = Math.abs(nodeOneCoordinates[0] - nodeTwoCoordinates[0]);
   let yChange = Math.abs(nodeOneCoordinates[1] - nodeTwoCoordinates[1]);
   return (xChange + yChange);
-}
-
-function weightedManhattanDistance(nodeOne, nodeTwo, nodes) {
-  let nodeOneCoordinates = nodeOne.id.split("-").map(ele => parseInt(ele));
-  let nodeTwoCoordinates = nodeTwo.id.split("-").map(ele => parseInt(ele));
-  let xChange = Math.abs(nodeOneCoordinates[0] - nodeTwoCoordinates[0]);
-  let yChange = Math.abs(nodeOneCoordinates[1] - nodeTwoCoordinates[1]);
-
-  if (nodeOneCoordinates[0] < nodeTwoCoordinates[0] && nodeOneCoordinates[1] < nodeTwoCoordinates[1]) {
-
-    let additionalxChange = 0,
-        additionalyChange = 0;
-    for (let currentx = nodeOneCoordinates[0]; currentx <= nodeTwoCoordinates[0]; currentx++) {
-      let currentId = `${currentx}-${nodeOne.id.split("-")[1]}`;
-      let currentNode = nodes[currentId];
-      additionalxChange += currentNode.weight;
-    }
-    for (let currenty = nodeOneCoordinates[1]; currenty <= nodeTwoCoordinates[1]; currenty++) {
-      let currentId = `${nodeTwoCoordinates[0]}-${currenty}`;
-      let currentNode = nodes[currentId];
-      additionalyChange += currentNode.weight;
-    }
-
-    let otherAdditionalxChange = 0,
-        otherAdditionalyChange = 0;
-    for (let currenty = nodeOneCoordinates[1]; currenty <= nodeTwoCoordinates[1]; currenty++) {
-      let currentId = `${nodeOne.id.split("-")[0]}-${currenty}`;
-      let currentNode = nodes[currentId];
-      additionalyChange += currentNode.weight;
-    }
-    for (let currentx = nodeOneCoordinates[0]; currentx <= nodeTwoCoordinates[0]; currentx++) {
-      let currentId = `${currentx}-${nodeTwoCoordinates[1]}`;
-      let currentNode = nodes[currentId];
-      additionalxChange += currentNode.weight;
-    }
-
-    if (additionalxChange + additionalyChange < otherAdditionalxChange + otherAdditionalyChange) {
-      xChange += additionalxChange;
-      yChange += additionalyChange;
-    } else {
-      xChange += otherAdditionalxChange;
-      yChange += otherAdditionalyChange;
-    }
-  } else if (nodeOneCoordinates[0] < nodeTwoCoordinates[0] && nodeOneCoordinates[1] >= nodeTwoCoordinates[1]) {
-    let additionalxChange = 0,
-        additionalyChange = 0;
-    for (let currentx = nodeOneCoordinates[0]; currentx <= nodeTwoCoordinates[0]; currentx++) {
-      let currentId = `${currentx}-${nodeOne.id.split("-")[1]}`;
-      let currentNode = nodes[currentId];
-      additionalxChange += currentNode.weight;
-    }
-    for (let currenty = nodeOneCoordinates[1]; currenty >= nodeTwoCoordinates[1]; currenty--) {
-      let currentId = `${nodeTwoCoordinates[0]}-${currenty}`;
-      let currentNode = nodes[currentId];
-      additionalyChange += currentNode.weight;
-    }
-
-    let otherAdditionalxChange = 0,
-        otherAdditionalyChange = 0;
-    for (let currenty = nodeOneCoordinates[1]; currenty >= nodeTwoCoordinates[1]; currenty--) {
-      let currentId = `${nodeOne.id.split("-")[0]}-${currenty}`;
-      let currentNode = nodes[currentId];
-      additionalyChange += currentNode.weight;
-    }
-    for (let currentx = nodeOneCoordinates[0]; currentx <= nodeTwoCoordinates[0]; currentx++) {
-      let currentId = `${currentx}-${nodeTwoCoordinates[1]}`;
-      let currentNode = nodes[currentId];
-      additionalxChange += currentNode.weight;
-    }
-
-    if (additionalxChange + additionalyChange < otherAdditionalxChange + otherAdditionalyChange) {
-      xChange += additionalxChange;
-      yChange += additionalyChange;
-    } else {
-      xChange += otherAdditionalxChange;
-      yChange += otherAdditionalyChange;
-    }
-  } else if (nodeOneCoordinates[0] >= nodeTwoCoordinates[0] && nodeOneCoordinates[1] < nodeTwoCoordinates[1]) {
-    let additionalxChange = 0,
-        additionalyChange = 0;
-    for (let currentx = nodeOneCoordinates[0]; currentx >= nodeTwoCoordinates[0]; currentx--) {
-      let currentId = `${currentx}-${nodeOne.id.split("-")[1]}`;
-      let currentNode = nodes[currentId];
-      additionalxChange += currentNode.weight;
-    }
-    for (let currenty = nodeOneCoordinates[1]; currenty <= nodeTwoCoordinates[1]; currenty++) {
-      let currentId = `${nodeTwoCoordinates[0]}-${currenty}`;
-      let currentNode = nodes[currentId];
-      additionalyChange += currentNode.weight;
-    }
-
-    let otherAdditionalxChange = 0,
-        otherAdditionalyChange = 0;
-    for (let currenty = nodeOneCoordinates[1]; currenty <= nodeTwoCoordinates[1]; currenty++) {
-      let currentId = `${nodeOne.id.split("-")[0]}-${currenty}`;
-      let currentNode = nodes[currentId];
-      additionalyChange += currentNode.weight;
-    }
-    for (let currentx = nodeOneCoordinates[0]; currentx >= nodeTwoCoordinates[0]; currentx--) {
-      let currentId = `${currentx}-${nodeTwoCoordinates[1]}`;
-      let currentNode = nodes[currentId];
-      additionalxChange += currentNode.weight;
-    }
-
-    if (additionalxChange + additionalyChange < otherAdditionalxChange + otherAdditionalyChange) {
-      xChange += additionalxChange;
-      yChange += additionalyChange;
-    } else {
-      xChange += otherAdditionalxChange;
-      yChange += otherAdditionalyChange;
-    }
-  } else if (nodeOneCoordinates[0] >= nodeTwoCoordinates[0] && nodeOneCoordinates[1] >= nodeTwoCoordinates[1]) {
-      let additionalxChange = 0,
-          additionalyChange = 0;
-      for (let currentx = nodeOneCoordinates[0]; currentx >= nodeTwoCoordinates[0]; currentx--) {
-        let currentId = `${currentx}-${nodeOne.id.split("-")[1]}`;
-        let currentNode = nodes[currentId];
-        additionalxChange += currentNode.weight;
-      }
-      for (let currenty = nodeOneCoordinates[1]; currenty >= nodeTwoCoordinates[1]; currenty--) {
-        let currentId = `${nodeTwoCoordinates[0]}-${currenty}`;
-        let currentNode = nodes[currentId];
-        additionalyChange += currentNode.weight;
-      }
-
-      let otherAdditionalxChange = 0,
-          otherAdditionalyChange = 0;
-      for (let currenty = nodeOneCoordinates[1]; currenty >= nodeTwoCoordinates[1]; currenty--) {
-        let currentId = `${nodeOne.id.split("-")[0]}-${currenty}`;
-        let currentNode = nodes[currentId];
-        additionalyChange += currentNode.weight;
-      }
-      for (let currentx = nodeOneCoordinates[0]; currentx >= nodeTwoCoordinates[0]; currentx--) {
-        let currentId = `${currentx}-${nodeTwoCoordinates[1]}`;
-        let currentNode = nodes[currentId];
-        additionalxChange += currentNode.weight;
-      }
-
-      if (additionalxChange + additionalyChange < otherAdditionalxChange + otherAdditionalyChange) {
-        xChange += additionalxChange;
-        yChange += additionalyChange;
-      } else {
-        xChange += otherAdditionalxChange;
-        yChange += otherAdditionalyChange;
-      }
-    }
-
-
-  return xChange + yChange;
-
-
 }
 
 module.exports = bidirectional;
