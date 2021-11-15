@@ -37,8 +37,8 @@
     var busList = {};
  
     // data is created inside the function so it is always unique
-    let repeat = (n) => {
-    console.log('draw '+n);
+    let repeat = (busList) => {
+    console.log(busList[2257]['time'].length);
     /* console.log(traj['loc'][0]); */
     /* const horizon = traj['time'].length - 1; */
     const horizon = 10;
@@ -100,12 +100,22 @@
     paths = busId.map(function(b){return trajectoryPath + "visddpg/" + "SG_22_1_" + b + ".csv";});
 
     for (var i = 0; i < paths.length; ++i) {
-      q.defer(d3.csv, "https://gist.githubusercontent.com/d3noob/fa0f16e271cb191ae85f/raw/bf896176236341f56a55b36c8fc40e32c73051ad/treedata.csv");
+      q.defer(d3.csv, paths[i]);
     }  
     q.awaitAll(function(error,files) {
       if (error) throw error;
-      n = files.length;
-      repeat(n);
+
+      for (var i = 0; i < paths.length; i++){
+        var traj = { 'time': [],'loc': [],'op': [] };
+        data = files[i];
+        for (var j = 0; j < data.length; j++) {
+            traj['time'].push(data[j].time); 
+            traj['loc'].push(data[j].loc); 
+            traj['op'].push(data[j].op); 
+        }
+        busList[busId[i]] = traj;
+      }
+      repeat(busList);
 });    
  
  
