@@ -1,51 +1,109 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content=
-	"width=device-width, initial-scale=1.0">
-  <svg width='500' height='500'>
-  </svg>
+<meta charset="utf-8" />
+<title>Animating a line with an arrow in d3</title>
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<style>
+
+.line {
+    stroke: blue;
+    stroke-width: 1.5px;
+    fill: white;
+}
+
+circle {
+    fill: red;
+}
+#marker {
+  stroke: black;
+    fill: black;
+}
+
+</style>
 </head>
-
 <body>
-	<!-- Fetching from CDN of D3.js -->
-	<script type="text/javascript"
-		src="https://d3js.org/d3.v4.min.js">
-	</script>
-	
-	<script>
-  const svg = d3.select('svg')
-  svg.append("svg:defs").append("svg:marker")
-    .attr("id", "triangle")
-    .attr("refX", 6)
-    .attr("refY", 6)
-    .attr("markerWidth", 30)
-    .attr("markerHeight", 30)
-    .attr("markerUnits","userSpaceOnUse")
-    .attr("orient", "auto")
-    .append("path")
-    .attr("d", "M 0 0 12 6 0 12 3 6")
-    .style("fill", "black");
-  svg.append("path")
-          .attr("marker-end", "url(#triangle)")
-          .attr("d", "M10 80 C 40 10, 65 10, 95 80 S 150 150, 180 80")
-          .attr("stroke", "grey")
-          .attr("stroke-width", "1")          
-          .attr("fill", "transparent")
-          .attr("class", "edges");
+<div id="chart">
+<script language="javascript">
+"use strict"
 
-          svg.append("line")
-            .attr("x1",  100)
-            .attr("y1", 100)
-            .attr("x2", 200)
-            .attr("y2", 100)
+var svg = d3.select("body").append("svg").append("g").attr("transform", "translate(100,50)")
 
-            .attr("stroke-width", 1)
-            .attr("stroke", "black")
-            .attr("marker-end", "url(#triangle)");
-	</script>
+    svg.append("svg:defs")
+	.append("svg:marker")
+	.attr("id", "arrow")	
+	.attr("refX", 2)
+	.attr("refY", 6)
+	.attr("markerWidth", 13)
+	.attr("markerHeight", 13)
+	.attr("orient", "auto")
+	.append("svg:path")
+	.attr("d", "M2,2 L2,11 L10,6 L2,2");
+
+
+var line = d3.svg.line()
+                 .x( function(point) { return point.lx; })
+                 .y( function(point) { return point.ly; });
+
+function lineData(d){
+    // i'm assuming here that supplied datum 
+    // is a link between 'source' and 'target'
+    var points = [
+        {lx: d.source.x, ly: d.source.y},
+        {lx: d.target.x, ly: d.target.y}
+    ];
+    return line(points);
+}
+
+var path = svg.append("path")
+.data([{source: {x : 10, y :10}, target: {x : 180, y : 180}}])
+    .attr("class", "line")
+	    //.style("marker-end", "url(#arrow)")
+    .attr("d", lineData);
+//var arrow = svg.append("svg:path")
+	//.attr("d", "M2,2 L2,11 L10,6 L2,2");
+
+
+console.log(d3.svg.symbol())
+
+var arrow = svg.append("svg:path")
+	.attr("d", d3.svg.symbol().type("triangle-down")(10,1));
+
+
+
+  arrow.transition()
+      .duration(2000)
+      .ease("linear")
+      .attrTween("transform", translateAlong(path.node()))
+      //.each("end", transition);
+
+
+// Returns an attrTween for translating along the specified path element.
+function translateAlong(path) {
+  var l = path.getTotalLength();
+    var ps = path.getPointAtLength(0);
+    var pe = path.getPointAtLength(l);
+    var angl = Math.atan2(pe.y - ps.y, pe.x - ps.x) * (180 / Math.PI) - 90;
+    var rot_tran = "rotate(" + angl + ")";
+  return function(d, i, a) {
+    console.log(d);
+    
+    return function(t) {
+      var p = path.getPointAtLength(t * l);
+      return "translate(" + p.x + "," + p.y + ") " + rot_tran;
+    };
+  };
+}
+
+var totalLength = path.node().getTotalLength();
+
+    path
+      .attr("stroke-dasharray", totalLength + " " + totalLength)
+      .attr("stroke-dashoffset", totalLength)
+      .transition()
+        .duration(2000)        
+        .ease("linear")
+        .attr("stroke-dashoffset", 0);
+</script>
 </body>
-
-</html>
+</html> 
