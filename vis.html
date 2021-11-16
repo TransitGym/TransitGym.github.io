@@ -32,69 +32,64 @@
       .attr("id", "visualization");
 
     const trajectoryPath = "https://raw.githubusercontent.com/TransitGym/TransitGym.github.io/master/public/browser/data/"
-    const busId = [2257,5602,];
-    /* 6259,10426,7589,5618,7559,20342,2213,2212,2258,5604,5603,16223,6260,10427,7590,10428,5619,7560,20344,20343,2214,2259,5605,16224,6261,10429,7591,5620,7561,20345,2215,2260,5606,16225,6263,6262,7592,5621,7562,20346,2216,2261,5607,16226,6264,10431,7593,5622,7563,2217,2262,5608,16227,6265,10432,7594,5623]; */
+    const busId = [2257,5602,6259];
+    /* ,10426,7589,5618,7559,20342,2213,2212,2258,5604,5603,16223,6260,10427,7590,10428,5619,7560,20344,20343,2214,2259,5605,16224,6261,10429,7591,5620,7561,20345,2215,2260,5606,16225,6263,6262,7592,5621,7562,20346,2216,2261,5607,16226,6264,10431,7593,5622,7563,2217,2262,5608,16227,6265,10432,7594,5623]; */
     var busList = {};
  
     // data is created inside the function so it is always unique
-    let repeat = (busList) => {
-    console.log(busList[2257]['time'].length);
-    /* console.log(traj['loc'][0]); */
+    let repeat = (bus) => {
+    /* console.log(busList[2257]['time'].length); */
+    console.log(new Date().getTime())
     /* const horizon = traj['time'].length - 1; */
-    const horizon = 10;
-    var x = d3.scaleLinear().domain([0, horizon]).range([0, w-10]);
+    const horizon = bus.length;
+    var x = d3.scaleLinear().domain([0, horizon]).range([0, w-100]);
     var y = d3.scaleLinear().domain([0, 20]).range([0, 20]);
-
+    
+    beginT = parseFloat(bus[0]['time']);
+    endT = parseFloat(bus[horizon-1]['time']);
+    duration_ = (endT - beginT)*2;
     var line = d3.
       line().
       x(function(d,i) {return x(i);}).
       y(function(d) {return d;}).
       curve(d3.curveNatural)
+/*     
+    var dots = d3.range(horizon) 
+    var line = d3.line().
+    x(d => x(dots)).
+    y(d => y(bus.loc)).
+    curve(d3.curveNatural); */
 
-      var data = d3.range(11).map(function(){return Math.random()*10})
-      /* var data = d3.range(horizon).map(function(k){return traj['loc'][k]}) */
-      // Uncomment following line to clear the previously drawn line
-      //svg.selectAll("path").remove();
+    /* var data = d3.range(horizon).map(function(){return Math.random()*10})  */
+    var data = d3.range(horizon).map(function(k){return bus[k]['loc']})
+    // Uncomment following line to clear the previously drawn line
+    //svg.selectAll("path").remove();
 
-      // Set a light grey class on old paths
-      svg.selectAll("path").attr("class", "old");
+    // Set a light grey class on old paths
+    svg.selectAll("path").attr("class", "old");
 
-      var path = svg.append("path")
-        .attr("d", line(data))
-        .attr("stroke", "darkgrey")
-        .attr("stroke-width", "2")
-        .attr("fill", "none");
+    var path = svg.append("path")
+      .attr("d", line(data))
+      .attr("stroke", "darkgrey")
+      .attr("stroke-width", "2")
+      .attr("fill", "none");
 
-      var totalLength = path.node().getTotalLength();
+    var totalLength = path.node().getTotalLength();
 
-      path
-        .attr("stroke-dasharray", totalLength + " " + totalLength)
-        .attr("stroke-dashoffset", totalLength)
-        .transition()
-          .duration(4000)
-          .ease(d3.easeLinear)
-          .attr("stroke-dashoffset", 0);
-          /*.on("end", repeat);*/
-    };
+    path.
+      attr("stroke-dasharray", totalLength + " " + totalLength).
+      attr("stroke-dashoffset", totalLength).
+      transition().
+      duration(duration_).
+      ease(d3.easeLinear).
+      attr("stroke-dashoffset", 0);
+      /* on("end", repeat);  */
+  };
  
     path = trajectoryPath + "visddpg/" + "SG_22_1_" + busId[0] + ".csv"
  
  
- /* function readData(path, b,callback){
-      d3.csv(path, function(data){ 
-            var traj = { 'time': [],'loc': [],'op': [] };
-             for (var i = 0; i < data.length; i++) {
-                traj['time'].push(data[i].time); 
-                traj['loc'].push(data[i].loc); 
-                traj['op'].push(data[i].op); 
-            }
-             busList[b] = traj;
-             console.log(1);
-             }); 
-      
-      callback(null);
-           
-    } */
+    // Load trajectory data 
     var q = d3.queue();  
 
     paths = busId.map(function(b){return trajectoryPath + "visddpg/" + "SG_22_1_" + b + ".csv";});
@@ -108,39 +103,30 @@
       for (var i = 0; i < paths.length; i++){
         var traj = { 'time': [],'loc': [],'op': [] };
         data = files[i];
-        for (var j = 0; j < data.length; j++) {
+        /* for (var j = 0; j < data.length; j++) {
             traj['time'].push(data[j].time); 
             traj['loc'].push(data[j].loc); 
             traj['op'].push(data[j].op); 
-        }
-        busList[busId[i]] = traj;
+        } */ 
+        data.columns = ['x', 'time', 'loc', 'op', 'status']
+        busList[busId[i]] = data;
       }
-      repeat(busList);
-});    
- 
- 
- 
+      for (var i=0; i<paths.length; i++){
+        if (i+1<paths.length){sleep(parseFloat(busList[busId[i+1]][0]['time']) - parseFloat(busList[busId[i]][0]['time']));}
+        repeat(busList[busId[i]]);
+       
+      }
 
-    /* repeat(); */
-    function csvToArray(str, delimiter = ",") {
-        const headers = str.slice(0, str.indexOf("\n")).split(delimiter);
-        const rows = str.slice(str.indexOf("\n") + 1).split("\n");
-        const data = headers.reduce(function(objects, head, index){
-            const values = rows.reduce(function(temp, row, i){
-            const value = parseFloat(row.split(delimiter)[index]);
-            if (i === 0){
-                temp = [value];
-            }
-            else{
-                temp.push(value);
-            }
-            return temp;
-            },{});
-            objects[head] = values;
-            return objects;
-        },{});
-        return data;
-        }
+      
+});    
+ function sleep(milliseconds) {
+  var start = new Date().getTime();
+  for (var i = 0; i < 1e7; i++) {
+    if ((new Date().getTime() - start) > milliseconds){
+      break;
+    }
+  }
+}
   </script>
 </body>
 </html>
