@@ -60,7 +60,7 @@
 
     var path = svg.append("svg:path").
       attr("d", line(data)).
-      attr("stroke", colors[c]).
+      attr("stroke", "white").
       attr("stroke-width", "6").
       attr("fill", "none");
 
@@ -123,15 +123,15 @@
     // Load trajectory data 
     var q = d3.queue();  
 
-    paths = busId.map(function(b){return trajectoryPath + "visddpg/" + "SG_22_1_" + b + ".csv";});
-
-    for (var i = 0; i < paths.length; ++i) {
-      q.defer(d3.csv, paths[i]);
+    paths1 = busId.map(function(b){return trajectoryPath + "visddpg/" + "SG_22_1_" + b + ".csv";});
+    paths2 = busId.map(function(b){return trajectoryPath + "visaccfn/" + "SG_22_1_" + b + ".csv";});
+    for (var i = 0; i < paths1.length; ++i) {
+      q.defer(d3.csv, paths1[i]);
     }  
     q.awaitAll(function(error,files) {
       if (error) throw error;
 
-      for (var i = 0; i < paths.length; i++){
+      for (var i = 0; i < paths1.length; i++){
         var traj = { 'time': [],'loc': [],'op': [] };
         data = files[i];
         busList[busId[i]] = data;
@@ -139,7 +139,7 @@
 
       var i = 0;
       (function loop(){
-        if (i >= paths.length) return;
+        if (i >= paths1.length) return;
         if (i-1>=0){
           delay = ratio*(parseFloat(busList[busId[i]][0]['time']) - parseFloat(busList[busId[i-1]][0]['time']));
         }
