@@ -30,6 +30,6 @@ Bus bunching has two major negative effects on rider experience: first, passenge
 
 - Here is an [lovely example](https://setosa.io/bus/) by [Lewis Lehe](https://twitter.com/lewislehe). 
 
-- Here is the [Visualization of bus holding control with MARL](./vis.html). To maintain regular headway among buses in the transit system is very similar
+- Here is the [Visualization of bus holding control](./vis.html). To maintain regular headway among buses in the transit system is very similar
 to the autonomous control to stablize traffic flow as researched by [FLOW](https://flow-project.github.io/), but our problem can be more complicated since there is not only uncertainty from agents (i.e., buses) but also from the
 bus stops, where the passenger demand could be a significant factor affecting the performance of the system. 

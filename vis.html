@@ -48,7 +48,7 @@
     
     beginT = parseFloat(bus[0]['time']);
     endT = parseFloat(bus[horizon-1]['time']);
-    duration_ = (endT - beginT)*ratio;
+    duration_ = 7200; 
     var line = d3.
       line().
       x(function(d) {return d;}).
@@ -65,9 +65,15 @@
 
     var startPoint = pathStartPoint(path);
 
-    var marker = svg.append("circle");
+    /* var marker = svg.append("circle");
     marker.attr("r", 6).
     attr("id", "marker"+id).
+    attr("transform", "translate(" + startPoint + ")"); */
+    var marker = svg.append("image");
+    marker.attr("xlink:href", "public/styling/bus.png");
+    marker.attr("id", "marker"+id).
+    attr("width", 40).
+    attr("height", 40).
     attr("transform", "translate(" + startPoint + ")");
 
   //Get path start point for placing marker
@@ -124,10 +130,10 @@
 
     pathsDDPG = busId.map(function(b){return trajectoryPath + "visddpg/" + "SG_22_1_" + b + ".csv";});
     pathsCAAC = busId.map(function(b){return trajectoryPath + "visaccfn/" + "SG_22_1_" + b + ".csv";});
-    for (var i = 0; i < pathsDDPG.length; ++i) {
+    for (var i = 0; i < pathsDDPG.length; i++) {
       q.defer(d3.csv, pathsDDPG[i]);
     }
-    for (var i = 0; i < pathsCAAC.length; ++i) {
+    for (var i = 0; i < pathsCAAC.length; i++) {
       q.defer(d3.csv, pathsCAAC[i]);
     }  
     q.awaitAll(function(error,files) {
