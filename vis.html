@@ -55,7 +55,8 @@
       y(function(d) {return offset;}).
       curve(d3.curveNatural);
 
-    var data = d3.range(horizon).map(function(k){return bus[k]['loc']*w/20}); 
+    var data = d3.range(horizon).map(function(k){return bus[k]['loc']*w/20});
+    var op =  d3.range(horizon).map(function(k){return parseFloat(bus[k]['op'])});
 
     var path = svg.append("svg:path").
       attr("d", line(data)).
@@ -73,17 +74,7 @@
     attr("y", offset-20).
     text(model);
 
-    const Stat = svg.append("text").
-    style("font-family", 'Saira').
-    style('font-size', '20px').
-    attr("text-anchor", "end").
-    attr("font-weight", "bold").
-    attr("x", w-50).
-    attr("y", offset-20).
-    transition().
-    duration(1750).
-    ease("linear").
-    text(id);
+
 
    
 
