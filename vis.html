@@ -62,6 +62,30 @@
       attr("stroke", colors[id]).
       attr("stroke-width", "6").
       attr("fill", "none");
+    
+      
+    const legendModel = svg.append("text").
+    style("font-family", 'Fantasy').
+    style('font-size', '20px').
+    attr("text-anchor", "end").
+    attr("font-weight", "bold").
+    attr("x", 50).
+    attr("y", offset-20).
+    text(model);
+
+    const Stat = svg.append("text").
+    style("font-family", 'Saira').
+    style('font-size', '20px').
+    attr("text-anchor", "end").
+    attr("font-weight", "bold").
+    attr("x", w-50).
+    attr("y", offset-20).
+    transition().
+    duration(1750).
+    ease("linear").
+    text(id);
+
+   
 
     var startPoint = pathStartPoint(path);
 
@@ -152,7 +176,7 @@
         }
         iDdpg++;
         setTimeout(function(){
-          repeat(busListDDPG[busId[iDdpg]], iDdpg, 10, 'ddpg');
+          repeat(busListDDPG[busId[iDdpg]], iDdpg, 50, 'ddpg');
           loopDDPG();
         }, delay);
       })(); 
@@ -169,7 +193,7 @@
         }
         iCaac++;
         setTimeout(function(){
-          repeat(busListCAAC[busId[iCaac]], iCaac, 90, 'caac');
+          repeat(busListCAAC[busId[iCaac]], iCaac, 130, 'caac');
           loopCAAC();
         }, delay);
       })();
