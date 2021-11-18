@@ -126,8 +126,8 @@
     // Load trajectory data 
     var q = d3.queue();  
 
-    pathsDDPG = busId.map(function(b){return trajectoryPath + "visddpg/" + "SG_22_1_" + b + ".csv";});
-    pathsCAAC = busId.map(function(b){return trajectoryPath + "visaccfn/" + "SG_22_1_" + b + ".csv";});
+    pathsDDPG = busId.map(function(b){return trajectoryPath + "ijcai/visddpg/" + "_SG_22_1_" + b + ".csv";});
+    pathsCAAC = busId.map(function(b){return trajectoryPath + "ijcai/visaccf/" + "_SG_22_1_" + b + ".csv";});
     for (var i = 0; i < pathsDDPG.length; i++) {
       q.defer(d3.csv, pathsDDPG[i]);
     }
