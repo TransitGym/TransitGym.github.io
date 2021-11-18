@@ -75,9 +75,6 @@
     text(model);
 
 
-
-   
-
     var startPoint = pathStartPoint(path);
 
     /* var marker = svg.append("circle");
@@ -91,6 +88,15 @@
     attr("height", 40).
     attr("transform", "translate(" + startPoint + ")");
 
+    var opIndicator = svg.append("rect").
+    attr("id","op"+id+model).
+    attr("transform", "translate(" + startPoint + ")").
+    attr("width", 1).
+    attr("height", 5).
+    attr("fill",'blue');
+    
+   
+
     //Get path start point for placing marker
     function pathStartPoint(path) {
       var d = path.attr("d"),
@@ -98,7 +104,7 @@
       return dsplitted[1];
     }
 
-    
+    var c = 0;
     transition(path);
 
     function tweenDash() {
@@ -107,7 +113,18 @@
         return function(t) {
           var marker = d3.select("#marker"+id+model); 
           var p = path.node().getPointAtLength(t * l);
-          marker.attr("transform", "translate(" + p.x + "," + p.y + ")");//move marker
+          //move marker
+          marker.
+          attr("transform", "translate(" + p.x + "," + p.y + ")");
+          // update occupancy
+          var opIndicator = d3.select("#op"+id+model); 
+          x = p.x+5;
+          y = p.y+3;
+          opIndicator.
+          attr("transform", "translate(" + x + "," + y + ")");
+          console.log(op[c] )
+          opIndicator.attr("width",op[c]*50);
+          c+=1;
           return i(t);
       }
     }
@@ -128,17 +145,23 @@
 
     pathsDDPG = busId.map(function(b){return trajectoryPath + "ijcai/visddpg/" + "_SG_22_1_" + b + ".csv";});
     pathsCAAC = busId.map(function(b){return trajectoryPath + "ijcai/visaccf/" + "_SG_22_1_" + b + ".csv";});
+    pathsNC = busId.map(function(b){return trajectoryPath + "ijcai/visnc/" + "_SG_22_1_" + b + ".csv";});
+
     for (var i = 0; i < pathsDDPG.length; i++) {
       q.defer(d3.csv, pathsDDPG[i]);
     }
     for (var i = 0; i < pathsCAAC.length; i++) {
       q.defer(d3.csv, pathsCAAC[i]);
     }  
+    for (var i = 0; i < pathsNC.length; i++) {
+      q.defer(d3.csv, pathsNC[i]);
+    } 
     q.awaitAll(function(error,files) {
       if (error) throw error;
       
       var busListDDPG = {};
       var busListCAAC = {};
+      var busListNC = {};
       var tot = 0;
 
       // fethch data from ddpg
@@ -155,6 +178,13 @@
         tot+=1;
       }
 
+      // fetch data from nc
+      for (var i = 0; i < pathsNC.length; i++){
+        data = files[tot];
+        busListNC[busId[i]] = data;
+        tot+=1;
+      }
+
       // vis ddpg
       var iDdpg = 0;
       (function loopDDPG(){
@@ -167,7 +197,7 @@
         }
         iDdpg++;
         setTimeout(function(){
-          repeat(busListDDPG[busId[iDdpg]], iDdpg, 50, 'ddpg');
+          repeat(busListDDPG[busId[iDdpg]], iDdpg, 130, 'ddpg');
           loopDDPG();
         }, delay);
       })(); 
@@ -184,12 +214,27 @@
         }
         iCaac++;
         setTimeout(function(){
-          repeat(busListCAAC[busId[iCaac]], iCaac, 130, 'caac');
+          repeat(busListCAAC[busId[iCaac]], iCaac, 210, 'caac');
           loopCAAC();
         }, delay);
       })();
 
       // vis no control
+      var iNc = 0;
+      (function loopNC(){
+        if (iNc >= pathsCAAC.length) return;
+        if (iNc-1>=0){
+          delay = ratio*(parseFloat(busListNC[busId[iNc]][0]['time']) - parseFloat(busListNC[busId[iNc-1]][0]['time']));
+        }
+        else{
+          delay = 0;
+        }
+        iNc++;
+        setTimeout(function(){
+          repeat(busListNC[busId[iNc]], iNc, 50, 'nc');
+          loopNC();
+        }, delay);
+      })();
 });    
  
   </script>
