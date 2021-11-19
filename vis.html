@@ -149,41 +149,44 @@
 
     needed = pathsDDPG.length*3;
 
-    var presvg = d3.select('body').
-   append('svg').
-   attr('height', w/2).
-   attr('width', h/2);
+    var presvg = svg.
+    append('svg').
+    attr('height', h).
+    attr('width', w);
 
-var segmentWidth = 300;
+    var segmentWidth = 600;
 
-var colorScale = d3.scaleLinear().domain([0, 0.5, 1]).range(['yellow', 'orange', 'limegreen']);
+    var colorScale = d3.scaleLinear().domain([0, 0.5, 1]).range(['yellow', 'orange', 'limegreen']);
+    xloc = w/4;
+    yloc = h/3;
+    presvg.append('rect').
+      attr('class', 'bg-rect').
+      attr('rx', 10).
+      attr('ry', 10).
+      attr('fill', 'gray').
+      attr('height', 15).
+      attr('width', segmentWidth).
+      attr('x', xloc).
+      attr('y', yloc);
 
-presvg.append('rect').
-  attr('class', 'bg-rect').
-  attr('rx', 10).
-  attr('ry', 10).
-  attr('fill', 'gray').
-  attr('height', 15).
-  attr('width', segmentWidth).
-  attr('x', 0);
+    var progress = presvg.append('rect').
+      attr('class', 'progress-rect').
+      attr('fill', colorScale(0)).
+      attr('height', 15).
+      attr('width', 10).
+      attr('rx', 10).
+      attr('ry', 10).
+      attr('x', xloc).
+      attr('y', yloc);
 
-var progress = presvg.append('rect').
-  attr('class', 'progress-rect').
-  attr('fill', colorScale(0)).
-  attr('height', 15).
-  attr('width', 0).
-  attr('rx', 10).
-  attr('ry', 10).
-  attr('x', 0);
-
-progress.transition().
-  duration(5000).
-  attr('width', segmentWidth).
-  attrTween("fill", function() {
-    return function(t) {
-      return colorScale(t)
-    }
-  });
+    progress.transition().
+      duration(12000).
+      attr('width', segmentWidth).
+      attrTween("fill", function() {
+        return function(t) {
+          return colorScale(t)
+        }
+      });
 
     for (var i = 0; i < pathsDDPG.length; i++) {
       q.defer(d3.csv, pathsDDPG[i]);

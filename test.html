@@ -1,125 +1,82 @@
 <!DOCTYPE html>
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
-<style type="text/css">
-  #line{
-    width: 100%;
-    margin: 20px 0;
-    height: 300px;
-  }
-  .old {
-    stroke: lightgrey;
-    stroke-dasharray: 5;
-    stroke-dashoffset: 5;
-  }
-​</style>
-</head>
+<meta charset="utf-8">
+<style>
+
+.progress-meter .background {
+  fill: #ccc;
+}
+
+.progress-meter .foreground {
+  fill: #000;
+}
+
+.progress-meter text {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+</style>
 <body>
-  <div id="line"></div>
-  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.4.1/d3.min.js"></script>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  <script type="text/javascript" src="https://d3js.org/d3.v3.min.js"></script>
+  <!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.4.1/d3.min.js"></script> -->
   <script src="https://d3js.org/d3-queue.v3.min.js"></script>
 
   <script type="text/javascript">
-    var w = window.innerWidth;
-    var h = 100;
 
-    var svg = d3.select("#line")
-      .append("svg")
-      .attr("width", w)
-      .attr("height", h)
-      .attr("id", "visualization");
+var width = 960,
+    height = 500,
+    twoPi = 2 * Math.PI,
+    progress = 0,
+    total = 1310000, // must be hard-coded if server doesn't report Content-Length
+    formatPercent = d3.format(".0%");
 
-    const trajectoryPath = "https://raw.githubusercontent.com/TransitGym/TransitGym.github.io/master/public/browser/data/"
-    const busId = [2257,5602,];
-    /* 6259,10426,7589,5618,7559,20342,2213,2212,2258,5604,5603,16223,6260,10427,7590,10428,5619,7560,20344,20343,2214,2259,5605,16224,6261,10429,7591,5620,7561,20345,2215,2260,5606,16225,6263,6262,7592,5621,7562,20346,2216,2261,5607,16226,6264,10431,7593,5622,7563,2217,2262,5608,16227,6265,10432,7594,5623]; */
-    var busList = {};
- 
-    // data is created inside the function so it is always unique
-    let repeat = () => {
-    console.log('sssss');
-    /* console.log(traj['loc'][0]); */
-    /* const horizon = traj['time'].length - 1; */
-    const horizon = 10;
-    var x = d3.scaleLinear().domain([0, horizon]).range([0, w-10]);
-    var y = d3.scaleLinear().domain([0, 20]).range([0, 20]);
+var arc = d3.svg.arc()
+    .startAngle(0)
+    .innerRadius(180)
+    .outerRadius(240);
 
-    var line = d3.line()
-      .x(function(d,i) {return x(i);})
-      .y(function(d) {return d;})
-      .curve(d3.curveNatural)
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height)
+  .append("g")
+    .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
 
-      var data = d3.range(11).map(function(){return Math.random()*10})
-      /* var data = d3.range(horizon).map(function(k){return traj['loc'][k]}) */
-      // Uncomment following line to clear the previously drawn line
-      //svg.selectAll("path").remove();
+var meter = svg.append("g")
+    .attr("class", "progress-meter");
 
-      // Set a light grey class on old paths
-      svg.selectAll("path").attr("class", "old");
+meter.append("path")
+    .attr("class", "background")
+    .attr("d", arc.endAngle(twoPi));
 
-      var path = svg.append("path")
-        .attr("d", line(data))
-        .attr("stroke", "darkgrey")
-        .attr("stroke-width", "2")
-        .attr("fill", "none");
+var foreground = meter.append("path")
+    .attr("class", "foreground");
 
-      var totalLength = path.node().getTotalLength();
-
-      path
-        .attr("stroke-dasharray", totalLength + " " + totalLength)
-        .attr("stroke-dashoffset", totalLength)
-        .transition()
-          .duration(4000)
-          .ease(d3.easeLinear)
-          .attr("stroke-dashoffset", 0);
-          /*.on("end", repeat);*/
-    };
-
-
-
-/* d3.queue()
-.defer(d3.csv, "https://gist.githubusercontent.com/d3noob/fa0f16e271cb191ae85f/raw/bf896176236341f56a55b36c8fc40e32c73051ad/treedata.csv")
-.defer(d3.csv, trajectoryPath + "visddpg/" + "SG_22_1_" + busId[0] + ".csv")
-.await(makeChart);//here you are calling the function makeChart
-
-   function makeChart(error,  data1, data2 ) {//first param is error and not data
-      console.log(data1);//workbook1
-      console.log(data2);//workbook2
-      console.log("everything ran");
-      busList = data1
-      repeat();
-     };  */
-  d3.queue()
-  .defer(d3.csv, "https://gist.githubusercontent.com/d3noob/fa0f16e271cb191ae85f/raw/bf896176236341f56a55b36c8fc40e32c73051ad/treedata.csv")
-  .awaitAll(function(error, files) { 
-    console.log(files );
-    console.log('');
- 
+var text = meter.append("text")
+    .attr("text-anchor", "middle")
+    .attr("dy", ".35em");
     
-function delayedHello(callback) {
-  setTimeout(function() {
-    console.log("Hello!");
-    callback(null);
-  }, 250);
-}
-function hello(index,callback){
-    console.log(index,'hello');
-    b[index] = 1
-    callback(null);
-}
-/* var q = d3.queue();
+d3.queue()
+  .defer(d3.csv, "one.json")
+  .defer(d3.csv, "two.json")
+  .defer(function(f) {
+    d3.json("https://api.github.com/repos/mbostock/d3/git/blobs/2e0e3b6305fa10c1a89d1dfd6478b1fe7bc19c1e?" + Math.random())
+      .on("progress", function() {
+        console.log('progress');
+        var i = d3.interpolate(progress, d3.event.loaded / total);
+        d3.transition().tween("progress", function() {
+          return function(t) {
+            progress = i(t);
+            foreground.attr("d", arc.endAngle(twoPi * progress));
+            text.text(formatPercent(progress));
+          };
+        });
+      })
+      .get(function(){
+        return true;
+      });
+  });
 
-for (var i = 0; i < 1000; ++i) {
-  q.defer(hello,i);
-}
 
-q.awaitAll(function(error) {
-  if (error) throw error;
-  console.log("Goodbye!");
-  console.log(b);
-});
-  */
-  </script>
-</body>
-</html>
+
+</script>
