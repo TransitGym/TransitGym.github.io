@@ -8,6 +8,10 @@
     margin: 20px 0;
     height: 300px;
   }
+
+  body {
+  background-color: #E6E6FA;
+  }
  
 ​</style>
 </head>
@@ -62,7 +66,7 @@
       attr("d", line(data)).
       attr("stroke", colors[id]).
       attr("stroke-width", "6").
-      attr("fill", "none");
+      attr("fill", colors[id]);
     
       
     const legendModel = svg.append("text").
