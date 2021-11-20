@@ -173,15 +173,15 @@
       attr('class', 'progress-rect').
       attr('fill', colorScale(0)).
       attr('height', 15).
-      attr('width', 200).
+      attr('width', 100).
       attr('rx', 10).
       attr('ry', 10).
       attr('x', xloc).
       attr('y', yloc);
 
     progress.transition().
-      duration(12000).
-      attr('width', segmentWidth).
+      duration(5000).
+      attr('width', segmentWidth-20).
       attrTween("fill", function() {
         return function(t) {
           return colorScale(t)
