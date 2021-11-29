@@ -1,0 +1,15 @@
+python main.py --control=2 --model=accf --train=1 --episode=251 --para_flag=SG0 --share_scale=1 --seed=4 --vis=0 --data=SG0 --restore=0 --w=2 --all=1
+python main.py --control=2 --model=ddpg --train=1 --episode=251 --para_flag=SG0 --share_scale=1 --seed=4 --vis=0 --data=SG0 --restore=0 --w=2 --all=1
+python main.py --control=2 --model=maddpg --train=1 --episode=251 --para_flag=SG0 --share_scale=1 --seed=4 --vis=0 --data=SG0 --restore=0 --w=2 --all=1
+python main.py --control=2 --model=accf --train=1 --episode=251 --para_flag=SG0 --share_scale=1 --seed=3 --vis=0 --data=SG0 --restore=0 --w=2 --all=1
+python main.py --control=2 --model=accf --train=1 --episode=251 --para_flag=SG0 --share_scale=1 --seed=2 --vis=0 --data=SG0 --restore=0 --w=2 --all=1
+python main.py --control=2 --model=accf --train=1 --episode=251 --para_flag=SG0 --share_scale=1 --seed=0 --vis=0 --data=SG0 --restore=0 --w=2 --all=1
+python main.py --control=2 --model=accf --train=1 --episode=251 --para_flag=SG0 --share_scale=1 --seed=1 --vis=0 --data=SG0 --restore=0 --w=2 --all=1
+python main.py --control=2 --model=ddpg --train=1 --episode=251 --para_flag=SG0 --share_scale=1 --seed=3 --vis=0 --data=SG0 --restore=0 --w=2 --all=1
+python main.py --control=2 --model=ddpg --train=1 --episode=251 --para_flag=SG0 --share_scale=1 --seed=2 --vis=0 --data=SG0 --restore=0 --w=2 --all=1
+python main.py --control=2 --model=ddpg --train=1 --episode=251 --para_flag=SG0 --share_scale=1 --seed=0 --vis=0 --data=SG0 --restore=0 --w=2 --all=1
+python main.py --control=2 --model=ddpg --train=1 --episode=251 --para_flag=SG0 --share_scale=1 --seed=1 --vis=0 --data=SG0 --restore=0 --w=2 --all=1
+python main.py --control=2 --model=maddpg --train=1 --episode=251 --para_flag=SG0 --share_scale=1 --seed=3 --vis=0 --data=SG0 --restore=0 --w=2 --all=1
+python main.py --control=2 --model=maddpg --train=1 --episode=251 --para_flag=SG0 --share_scale=1 --seed=2 --vis=0 --data=SG0 --restore=0 --w=2 --all=1
+python main.py --control=2 --model=maddpg --train=1 --episode=251 --para_flag=SG0 --share_scale=1 --seed=0 --vis=0 --data=SG0 --restore=0 --w=2 --all=1
+python main.py --control=2 --model=maddpg --train=1 --episode=251 --para_flag=SG0 --share_scale=1 --seed=1 --vis=0 --data=SG0 --restore=0 --w=2 --all=1
