@@ -28,7 +28,7 @@ pip install -r requirements.txt
     * Route.py :_Definition of bus route related attributes and methods_
     * Sim_Engine.py :_Basic logic of the simulation_
     * util.py :_Some assistant methods_
-- result:_Results of the paper_
+- result:Store results
     
 ## Data Introduction
 ### The data are not publicly available
