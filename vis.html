@@ -60,7 +60,7 @@
       y(function(d) {return offset;}).
       curve(d3.curveNatural);
 
-    var data = d3.range(horizon).map(function(k){return bus[k]['loc']*w/20});
+    var data = d3.range(horizon).map(function(k){return bus[k]['loc']*w/80});
     var op =  d3.range(horizon).map(function(k){return parseFloat(bus[k]['op'])});
 
     var path = svg.append("svg:path").
