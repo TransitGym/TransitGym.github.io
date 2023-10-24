@@ -252,7 +252,7 @@ class Agent():
         a = self.actor(state).squeeze(0).detach().numpy()
         return a
 
-    def learn(self, memories, batch=16, bus_id=None, weight_leaner=None):
+    def learn(self, memories, batch=16, bus_id=None):
         if len(memories) < 1000:
             return 0, 0
 
@@ -276,15 +276,12 @@ class Agent():
             batch_actor_a.append(
                 self.actor([torch.tensor(s, dtype=torch.float32), torch.tensor(embed, dtype=torch.float32)]))
             batch_fp.append(torch.FloatTensor(fp))
-            # batch_mask.append(len(fp)-1)
-            # batch_mask_n.append(len(nfp)-1)
+
             batch_a.append(a)
-            if r[-1] == 0:
-                w = weight_leaner[0].propose_w(w_curr=weight_leaner[0].w_curr_mean)
-                r = np.dot(w, np.array(r)[:2])
-            else:
-                w = weight_leaner[1].propose_w(w_curr=weight_leaner[1].w_curr_mean)
-                r = np.dot(w, np.array(r))
+
+            w = np.array(s[-3:])
+            r = np.dot(w, np.array(r))
+
             batch_r.append(r)
             batch_ns.append(ns)
             batch_embed.append(embed)

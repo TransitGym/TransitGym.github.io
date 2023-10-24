@@ -53,6 +53,7 @@ class Bus():
         self.current_stop_duration = 0
         self.current_speed = 0.
         self.speed_set = []
+        self.load_log = []
         # self.dir = dir
         # self.svrcn= None
         # self.block_id = block_id

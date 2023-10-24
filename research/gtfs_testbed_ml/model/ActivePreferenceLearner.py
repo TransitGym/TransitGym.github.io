@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 
 class PreferenceLearner:
-    def __init__(self, members, n_iter=150000, warmup=50000, d=3):
+    def __init__(self, members, n_iter=15000, warmup=5000, d=3):
 
         self.n_iter = n_iter
         self.warmup = warmup
@@ -31,8 +31,9 @@ class PreferenceLearner:
     def reset(self):
         self.volume_buffer.reset()
 
-    def update(self, member_id, r1, r2, r3, s):
-        self.traj[member_id][self.num_traj].append(np.concatenate([np.array([r1, r2, r3]).reshape(3), s.reshape(-1)]))
+    def update(self, member_id, r1, r2, r3):
+        # self.traj[member_id][self.num_traj].append(np.concatenate([np.array([r1, r2, r3]).reshape(3), s.reshape(-1)]))
+        self.traj[member_id][self.num_traj].append(np.concatenate([np.array([r1, r2, r3]).reshape(3)]))
 
     # add delta and preference
     def log_preferences(self, delta, pref):
@@ -54,11 +55,11 @@ class PreferenceLearner:
 
     def propose_w(self, w_curr):
         w_new = st.multivariate_normal(mean=w_curr,
-                                       cov=0.01).rvs()  # Random Variates sampled from new posterior distribution
+                                       cov=0.05).rvs()  # Random Variates sampled from new posterior distribution
         return w_new
 
     def propose_w_prob(self, w1, w2):
-        q = st.multivariate_normal(mean=w1, cov=0.01).pdf(w2)
+        q = st.multivariate_normal(mean=w1, cov=0.05).pdf(w2)
         return q
 
     # def propose_w_prob(self, w1, w2):
@@ -67,6 +68,8 @@ class PreferenceLearner:
     #
     # def propose_w(self, w_curr):
     #     return st.beta(a=np.array(w_curr)+0.1, b=1.).rvs(self.d)
+
+
 
     # def w_prior(self, w):
     #     try:
@@ -106,7 +109,7 @@ class PreferenceLearner:
 
         return logliks + log_prior
 
-    def update_volume(self, ):
+    def update_volume(self,):
         rand_idx = np.random.choice(np.arange(self.num_traj), 2, replace=False)
         index1 = rand_idx[0]
         index2 = rand_idx[1]
@@ -116,8 +119,8 @@ class PreferenceLearner:
         for k, traj_of_bus in self.traj.items():
             if len(traj_of_bus[index1]) == 0:
                 continue
-            traj1_rewards = np.array(traj_of_bus[index1]).reshape(-1, 3 + 11)[:, :self.d]
-            traj2_rewards = np.array(traj_of_bus[index2]).reshape(-1, 3 + 11)[:, :self.d]
+            traj1_rewards = np.array(traj_of_bus[index1]).reshape(-1, 3)[:, :self.d]
+            traj2_rewards = np.array(traj_of_bus[index2]).reshape(-1, 3)[:, :self.d]
 
             new_returns_1 += np.sum(traj1_rewards, axis=0)
             new_returns_2 += np.sum(traj2_rewards, axis=0)
@@ -143,7 +146,7 @@ class PreferenceLearner:
         for i in range(1, self.warmup + self.n_iter + 1):
             # sample from current posterior
             w_curr = np.array(w_curr).reshape([self.d])
-            w_new = self.propose_w(w_curr=w_curr)
+            w_new = self.propose_w(w_curr=w_curr) # use proposed distribution to sample
             w_new = np.array(w_new).reshape([self.d])
 
             w_new = np.exp(w_new) / np.sum(np.exp(w_new))
@@ -152,10 +155,10 @@ class PreferenceLearner:
                 print(w_arr)
                 assert 1 == 0
 
-            pos_prob_curr = self.posterior_log_prob(self.deltas, self.prefs, w_curr)
-            pos_prob_new = self.posterior_log_prob(self.deltas, self.prefs, w_new)
-
-            if pos_prob_new > pos_prob_curr:
+            pos_prob_curr = self.posterior_log_prob(self.deltas, self.prefs, w_curr) # evaluate current w with posterior distribution
+            pos_prob_new = self.posterior_log_prob(self.deltas, self.prefs, w_new) # evaluate newly sampled w with posterior distribution
+ 
+            if pos_prob_new > pos_prob_curr: # determined whether accept new sampled w
                 accept_ratio = 1
             else:
                 # i.e., g(x|x')/g(x'|x)

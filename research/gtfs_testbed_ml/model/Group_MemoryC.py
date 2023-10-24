@@ -17,7 +17,7 @@ class Memory():
     def update(self):
         for m in list(self.memory.keys()):
             l =len(self.memory[m])
-            for _ in range(int( l* 0.8)):
+            for _ in range(int( l* 0.6)):
                 self.memory[m].popleft()
 
                 self.experience[m]-=1

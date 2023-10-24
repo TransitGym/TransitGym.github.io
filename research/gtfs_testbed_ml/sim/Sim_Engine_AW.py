@@ -1,24 +1,25 @@
 import numpy as np
+import torch
+
 from sim.Passenger import Passenger
-from sim.Route import Route
-import matplotlib.pyplot as plt
 from model.Group_MemoryC import Memory
+
 import pandas as pd
-import time
 import math
 import matplotlib.pyplot as plt
-from collections import OrderedDict
 from model.PreferenceWorker import PWorker
+from model.ActivePreferenceLearner import PreferenceLearner
+
 
 def softmax(probs):
-  ratio = 1.5
-  probs_ = [p*ratio for p in probs]
-  return [np.exp(p*ratio) / np.sum(np.exp(probs_)) for p in probs_]
+    ratio = 1.5
+    probs_ = [p * ratio for p in probs]
+    return [np.exp(p * ratio) / np.sum(np.exp(probs_)) for p in probs_]
 
 
 def H(prob):
-  e_x = [-p_x * np.math.log(p_x, 2) for p_x in prob]
-  return np.sum(e_x)
+    e_x = [-p_x * np.math.log(p_x, 2) for p_x in prob]
+    return np.sum(e_x)
 
 
 class Engine():
@@ -26,7 +27,8 @@ class Engine():
                  policy_types=0,
                  share_scale=0, is_allow_overtake=0, hold_once_arr=1, control_type=1, seed=1, all=0, weight=0,
                  shares=0):
-        self.debug = {"1":[],"2":[],"3":[],"4":[],"5":[],"6":[]}
+        self.debug = {"1": [], "2": [], "3": [],
+                      "4": [], "5": [], "6": []}
         self.all = all
         self.busstop_list = busstop_list
         self.simulation_step = simulation_step
@@ -38,6 +40,8 @@ class Engine():
         self.is_allow_overtake = is_allow_overtake
         self.hold_once_arr = hold_once_arr
         self.control_type = control_type
+        if control_type == 7:
+            from model.Group_MemoryAW import Memory
         self.agents = agents
         self.bus_list = bus_list
         self.bunching_times = {}
@@ -59,9 +63,10 @@ class Engine():
 
         members = list(self.bus_list.keys())
         self.GM = Memory(members)
-        self.PW = PWorker(members,seed=seed)
+        self.PW = PWorker(members)
+        self.APL = PreferenceLearner(members=members, d=3)
+        self.APL2 = PreferenceLearner(members=members, d=2)
         self.bay_capacity = 1
-        self.seed = seed
 
         for b_id, b in self.bus_list.items():
             self.reward_signal[b_id] = []
@@ -106,7 +111,6 @@ class Engine():
         self.diverge_stop = {}
         for bus_stop_id, bus_stop in self.busstop_list.items():
             if bus_stop_id in self.shared_stops:
-
                 bus_stop.is_in_shared_corridor = 1
                 self.shared_stops_locs[bus_stop_id] = bus_stop.loc
                 try:
@@ -124,25 +128,14 @@ class Engine():
                                 self.diverge_stop[rid] = [bus_stop.id, bus_stop.loc_route[rid]]
                 except:
                     print()
-        # for k,v in self.route_list.items():
-        #     stoplist = v.stop_list
-        #     minstop = 999
-        #     maxstop = 0
-        #     for s in self.shared_stops:
-        #         try:
-        #             minstop = min(minstop,stoplist.index(s))
-        #         except:
-        #             pass
-        #         try:
-        #             maxstop = max(maxstop,stoplist.index(s))
-        #         except:
-
         self.action_record = []
         self.reward_record = []
         self.state_record = []
         self.accident_rate = 0.
         self.sensor_error_rate = 0.
         self.demand_impulse_rate = 0.
+
+        self.sim_actual_begin = -1
 
         self.encounter_list = []
 
@@ -185,10 +178,12 @@ class Engine():
             stop_wise_hold = {}
             delay = []
             miss = []
+            wait_cost_temp = []
             for pax_id, pax in self.pax_list.items():
                 if self.bus_list[pax.took_bus].route_id != routeid:
                     continue
                 w = min(pax.onboard_time - pax.arr_time, self.simulation_step - pax.arr_time)
+                miss.append(pax.miss)
                 if pax.miss < 2:
                     wait_cost.append(w)
 
@@ -207,7 +202,7 @@ class Engine():
                     travel_cost.append(self.simulation_step - pax.arr_time)
                     still_wait += 1
 
-            # print('MISS:%g'%(np.max(miss)))
+            print('MISS:%g'%(np.max(miss)))
             hold_cost = []
             demo_bus = ''
             for bus_id, bus in self.bus_list.items():
@@ -222,8 +217,7 @@ class Engine():
                         else:
                             stop_wise_hold[k] = [bus.hold_cost[k]]
                     else:
-                        print('v==0',bus.id)
-
+                        print('v==0', bus.id)
 
             stop_wise_wait_order = []
             stop_wise_hold_order = []
@@ -267,6 +261,7 @@ class Engine():
             system_travelcost.append(travel_cost)
             system_waitcost.append(wait_cost)
 
+
             log['wait_cost'] = wait_cost
             log['travel_cost'] = travel_cost
             log['hold_cost'] = hold_cost
@@ -276,15 +271,15 @@ class Engine():
             log['sth'] = stop_wise_hold_order
             log['bunching'] = self.bunching_times[routeid]
             log['delay'] = delay
+            log['EV'] = (np.mean(list(headways_var.values())) / (np.mean(list(headways_mean.values())) ** 2))
             log["encounter_mean"] = np.mean(self.encounter_list)
             log["encounter_std"] = np.std(self.encounter_list)
-            log['EV'] = (np.mean(list(headways_var.values())) / (np.mean(list(headways_mean.values())) ** 2))
             print('[%s] bunching times:%g wait:%g travel:%g EV:%g pax:%d' % (
-            routeid, self.bunching_times[routeid], np.mean(wait_cost), np.mean(travel_cost),
-            (np.mean(list(headways_var.values())) / (np.mean(list(headways_mean.values())) ** 2)),
-            self.pax_route[routeid]))
-            # print('Mean of  var of headway', np.mean(list(headways_var.values())))
-            # print('Mean of headway', np.mean(list(headways_mean.values())))
+                routeid, self.bunching_times[routeid], np.mean(wait_cost), np.mean(travel_cost),
+                (np.mean(list(headways_var.values())) / (np.mean(list(headways_mean.values())) ** 2)),
+                self.pax_route[routeid]))
+            print('Mean of  var of headway', np.mean(list(headways_var.values())))
+            print('Mean of headway', np.mean(list(headways_mean.values())))
             AWT = []
             AHD = []
             AOD = []
@@ -313,21 +308,14 @@ class Engine():
         # plt.show()
         print('system wait cost', (np.mean(system_waitcost[0]) + np.mean(system_waitcost[1])) / 2.)
         print('system travel cost', (np.mean(system_travelcost[0]) + np.mean(system_travelcost[1])) / 2.)
-        # print('Mean of headway at shared stops', np.mean(headways_mean_sharestops))
-        # print('Mean of variation of headway at shared stops', np.mean(headways_var_sharestops))
+        print('Mean of headway at shared stops', np.mean(headways_mean_sharestops))
+        print('Mean of variation of headway at shared stops', np.mean(headways_var_sharestops))
         for k, v in logs.items():
             logs[k]['system_wait'] = (np.mean(system_waitcost[0]) + np.mean(system_waitcost[1])) / 2.
             logs[k]['system_travel'] = (np.mean(system_travelcost[0]) + np.mean(system_travelcost[1])) / 2.
             logs[k]['system_aod'] = (np.mean(system_AOD[0]) + np.mean(system_AOD[1])) / 2.
         # plt.scatter([ss for ss in range(len(headways_var_sharestops))], headways_var_sharestops)
         # plt.show()
-        print(len(self.encounter_list))
-        print(np.mean(self.encounter_list))
-        print(np.std(self.encounter_list))
-        # arr = np.array(self.busstop_list["64109"].arr_log["43_1"]).reshape(-1,)
-        # arr_ = arr[1:] - arr[:-1]
-        # print(np.std(arr_))
-        # print(np.mean(arr_))
         return logs
 
     def close(self):
@@ -429,15 +417,7 @@ class Engine():
 
             new_pax = stop.get_pax(bus, sim_step=self.simulation_step)
             self.pax_route[bus.route_id] += len(new_pax)
-            # Simulate burst
-            # if ((len(bus.pass_stop) == 30 or len(bus.pass_stop) == 29 or len(bus.pass_stop) == 28)and  self.simulation_step -24149>3600*6 and self.simulation_step-24149<3600*7) :
-            #    bus.abnormal = 1.
-            #    for i in range(50):
-            #        p = Passenger(id=-i,arr_time=self.simulation_step,origin=stop.id)
-            #        p.dest = bus.left_stop[np.random.randint(0,len(bus.left_stop))]
-            #        new_pax.append(p)
-            # else:
-            #     bus.abnormal = 0
+
             num = len(self.pax_list) + 1
             for k in range(len(new_pax)):
                 p = new_pax[k]
@@ -456,6 +436,7 @@ class Engine():
                 # add logic to consider multiline impact (i.e. the passenger can not board bus this time can board the bus with same destination later?)
                 if bus != None and self.pax_list[num].route == bus.route_id:
                     self.pax_list[num].miss += 1
+
                 if bus != None and bus.capacity > len(bus.onboard_list) and self.pax_list[
                     num].route == bus.route_id:
                     self.pax_list[num].onboard_time = self.simulation_step
@@ -468,6 +449,8 @@ class Engine():
 
             for num in pax_leave_stop:
                 self.busstop_list[stop.id].waiting_list.remove(num)
+                # 714
+                # self.busstop_list[stop.id].pax_actual_done.append(num)
 
         self.busstop_list[stop.id].actual_departures[self.simulation_step] = self.busstop_list[stop.id].cum_dep
         self.busstop_list[stop.id].actual_arrivals[self.simulation_step] = self.busstop_list[stop.id].cum_arr
@@ -475,8 +458,7 @@ class Engine():
 
     def sim(self):
         # update bus state
-        ## dispatch bus
-        Flag = False
+
         if self.simulation_step > 180000 and self.simulation_step % 120 == 0:
             for r_id, r in self.route_list.items():
                 trajectory = pd.DataFrame()
@@ -507,13 +489,12 @@ class Engine():
                 bus.current_speed = bus.speed * np.random.randint(60., 120.) / 100.
                 self.dispatch_buslist[bus_id] = bus
 
+                if self.sim_actual_begin == -1:
+                    self.sim_actual_begin = self.simulation_step
+
             if bus.is_dispatch == 1 and len(self.dispatch_buslist[bus_id].left_stop) <= 0:
                 bus.is_dispatch = -1
-                # try:
-                #     self.busstop_list[self.dispatch_buslist[bus_id].pass_stop[-1]].bus_queue.remove(bus_id)
-                # except:
-                #     print(bus_id,self.dispatch_buslist[bus_id].pass_stop[-1])
-                # print('finish',bus_id, len(self.dispatch_buslist[bus_id].pass_stop))
+
                 self.dispatch_buslist.pop(bus_id, None)
 
         for bus_id, bus in self.dispatch_buslist.items():
@@ -531,6 +512,14 @@ class Engine():
             ### on-arrival
             if bus.arr == 0 and abs(bus.loc[-1] - bus.stop_dist[bus.left_stop[0]]) < bus.speed:
                 curr_stop = self.busstop_list[bus.left_stop[0]]
+                # 20220714
+                # if self.busstop_list[curr_stop.id].serving_period[self.simulation_step] == 0:
+                #     self.busstop_list[curr_stop.id].serving_period[self.simulation_step] = bus.route_id
+                # else:
+                #     if self.busstop_list[curr_stop.id].serving_period[self.simulation_step] == bus.route_id:
+                #         self.busstop_list[curr_stop.id].serving_period[self.simulation_step] = "bunching"
+                #     else:
+                #         self.busstop_list[curr_stop.id].serving_period[self.simulation_step] = "conflict"
 
                 if bus.forward_bus != None and bus.forward_bus not in self.busstop_list[bus.left_stop[0]].bus_queue \
                         and curr_stop.id not in self.bus_list[bus.forward_bus].pass_stop:
@@ -539,12 +528,6 @@ class Engine():
 
                 if bus.id not in self.busstop_list[bus.left_stop[0]].bus_queue:
                     self.busstop_list[bus.left_stop[0]].bus_queue.append(bus.id)
-                    # if bus.route_id not in  self.busstop_list[bus.left_stop[0]].queue_detail:
-                    #     self.busstop_list[bus.left_stop[0]].queue_detail[bus.route_id]=[bus.dispatch_time]
-                    # else:
-                    #     self.busstop_list[bus.left_stop[0]].queue_detail[bus.route_id].append(bus.dispatch_time)
-                    # if self.busstop_list[bus.left_stop[0]].queue_detail[bus.route_id][-1]<self.busstop_list[bus.left_stop[0]].queue_detail[bus.route_id][-2]:
-                    #     print('wrong')
 
                 if self.max_bus_queue < len(self.busstop_list[bus.left_stop[0]].bus_queue):
                     self.max_bus_queue = len(self.busstop_list[bus.left_stop[0]].bus_queue)
@@ -554,32 +537,12 @@ class Engine():
                         bus.left_stop) == 1:
                     pass
                 else:
-                    # print(curr_stop.id,bus.id,self.simulation_step)
-                    # print((self.busstop_list[curr_stop.id].bus_queue))
                     bus.stop(curr_stop=curr_stop)
 
                     continue
                 # Train & Test uncertainty
                 r = np.clip(np.random.normal(1., self.accident_rate), a_min=0.1, a_max=1.5)
                 bus.current_speed = r * bus.speed
-
-                # if bus.left_stop[0] in self.shared_stops:
-                #     bus.is_in_share_corridor = 1
-                # else:
-                #     bus.is_in_share_corridor = 0
-
-                # print(bus.current_speed,self.accident_rate,bus.speed)
-                ## Test for vis
-                # bus.abnormal = 0
-                # if (len(bus.pass_stop) ==30 and int(bus.id) ==6263) or (len(bus.pass_stop) ==12 and int(bus.id) ==7594) \
-                #         or (len(bus.pass_stop) ==24 and int(bus.id) ==16227) or (len(bus.pass_stop) ==6 and int(bus.id) ==2259):
-                #     bus.current_speed = bus.speed* 0.1
-                #     bus.abnormal = 1
-                #     self.accident+=1
-                # print('accident',self.accident,self.count)
-                #### determine boarding and alight cost
-                # if bus.left_stop[0] not in self.busstop_list:
-                #     self.busstop_list[bus.left_stop[0]] = self.busstop_list[bus.left_stop[0].split('_')[0]]
 
                 self.busstop_list[bus.left_stop[0]].arr_bus_load.append(len(bus.onboard_list))
 
@@ -589,16 +552,15 @@ class Engine():
                 else:
                     self.busstop_list[curr_stop.id].arr_log[bus.route_id] = [
                         self.simulation_step]  # [[bus.id, self.simulation_step]]
-
+                # 714
+                self.busstop_list[curr_stop.id].uni_arr_log.append([bus.id, self.simulation_step])
                 bus.arr = 1
 
                 board_cost, alight_cost, wait_num = self.serve_by_presetOD(bus, curr_stop)
-                for _ in range(len(bus.onboard_list)):
-                    # if curr_stop.id == '64109':
-                    self.encounter_list.append(len(bus.onboard_list)-1)
-                bus.load_log.append(len(bus.onboard_list))
-                bus.serve_remain = max(board_cost, alight_cost)
 
+                bus.serve_remain = max(board_cost, alight_cost)
+                for _ in range(len(bus.onboard_list)):
+                    self.encounter_list.append(len(bus.onboard_list)-1)
                 # self.busstop_list[curr_stop.id].bus_queue.append(bus.id)
 
                 bus.stay[curr_stop.id] = 1
@@ -633,6 +595,14 @@ class Engine():
                 bus.serve_remain = 0
 
             if bus.hold_remain > 0 or bus.serve_remain > 0:
+                # 20220714
+                # if self.busstop_list[bus.pass_stop[-1]].serving_period[self.simulation_step] == 0:
+                #     self.busstop_list[bus.pass_stop[-1]].serving_period[self.simulation_step] = bus.route_id
+                # else:
+                #     if self.busstop_list[curr_stop.id].serving_period[self.simulation_step] == bus.route_id:
+                #         self.busstop_list[curr_stop.id].serving_period[self.simulation_step] = "bunching"
+                #     else:
+                #         self.busstop_list[curr_stop.id].serving_period[self.simulation_step] = "conflict"
                 bus.stop()
             else:
                 if self.is_allow_overtake == 1:
@@ -658,17 +628,20 @@ class Engine():
                             else:
                                 self.busstop_list[bus.pass_stop[-1]].dep_log[bus.route_id] = [
                                     [bus.id, self.simulation_step]]
+                            self.busstop_list[bus.pass_stop[-1]].uni_dep_log.append(self.simulation_step)
                         bus.dep(bus.current_speed)
 
         self.simulation_step += 1
+        # for debug cumulative arrival
+        # if False and self.simulation_step % 10 == 0:
+        #     for stop_id, stop in self.busstop_list.items():
+        #         stop.debug_waitting(self.simulation_step)
         Flag = False
         for bus_id, bus in self.bus_list.items():
+
             if bus.is_dispatch != -1:
                 Flag = True
-        # if False:
-        #     if self.simulation_step % 10 == 0:
-        #         for stop_id, stop in self.busstop_list.items():
-        #             stop.debug_waiting(self.simulation_step)
+
         return Flag
 
     def control(self, bus, bus_stop, wait_num):
@@ -677,7 +650,7 @@ class Engine():
             return 0
         if self.control_type == 1:
             fh, bh = self.cal_headway(bus)
-            if bus.forward_bus == None:
+            if bus.forward_bus is None:
                 return 0
             else:
                 return min(max(0, abs(bus.dispatch_time - self.bus_list[bus.forward_bus].dispatch_time) - fh), 90.)
@@ -685,7 +658,7 @@ class Engine():
 
         # Coordinated control strategy for multi-line bus bunching in common corridors [Zhou et al]
         if self.control_type == 2:
-            if bus.forward_bus == None:
+            if bus.forward_bus is None:
                 return 0
             fh, bh = self.cal_headway(bus)
             delta = self.simulation_step + bus.serve_remain - bus_stop.dep_log[bus.route_id][-1][1]
@@ -730,7 +703,7 @@ class Engine():
         else:
             state = [1, 0]
         current_interval = self.simulation_step
-        if self.control_type % 2 == 0 or self.control_type==7:
+        if self.control_type % 2 == 0 or self.control_type == 7:
             state += self.augment_state_on_ml(bus, bus_stop)
             # print(state)
         for record in self.arrivals[current_interval]:
@@ -745,33 +718,39 @@ class Engine():
         fh, bh = self.cal_headway(bus)
         state += [min(fh / 600., 2.), min(bh / 600., 2.)]
         stop_embedding = np.array([])
-        com_oneway = [0.,0.,0.,0.,0.]
-        if is_com == 1:
-            for otherbus_id, otherbus in self.dispatch_buslist.items():
-                if otherbus_id==bus.id:
-                    continue
-                if bus.route_id==otherbus.route_id and abs(len(bus.pass_stop)-len(otherbus.pass_stop))<=4 :
-
-                    com_oneway+=[float(len(otherbus.pass_stop))/float(len(otherbus.stop_list)), float(otherbus.stop_list.index(bus_stop.id))/float(len(otherbus.stop_list)),
-                                 float(len(otherbus.onboard_list))/otherbus.capacity,1.,0. ]
-
-                elif (bus_stop.id in otherbus.stop_list and abs(len(bus.pass_stop)-otherbus.stop_list.index(bus_stop.id))<=4 ):
-
-                    com_oneway+=[float(len(otherbus.pass_stop))/float(len(otherbus.stop_list)), float(otherbus.stop_list.index(bus_stop.id))/float(len(otherbus.stop_list)),
-                                 float(len(otherbus.onboard_list))/otherbus.capacity,0.,1. ]
-
-            state= [state, com_oneway]
+        com_oneway = [0., 0., 0., 0., 0.]
+        # if is_com == 1 and False:
+        #     for otherbus_id, otherbus in self.dispatch_buslist.items():
+        #         if otherbus_id == bus.id:
+        #             continue
+        #         if bus.route_id == otherbus.route_id and abs(len(bus.pass_stop) - len(otherbus.pass_stop)) <= 4:
+        #
+        #             com_oneway += [float(len(otherbus.pass_stop)) / float(len(otherbus.stop_list)),
+        #                            float(otherbus.stop_list.index(bus_stop.id)) / float(len(otherbus.stop_list)),
+        #                            float(len(otherbus.onboard_list)) / otherbus.capacity, 1., 0.]
+        #
+        #         elif (bus_stop.id in otherbus.stop_list and abs(
+        #                 len(bus.pass_stop) - otherbus.stop_list.index(bus_stop.id)) <= 4):
+        #
+        #             com_oneway += [float(len(otherbus.pass_stop)) / float(len(otherbus.stop_list)),
+        #                            float(otherbus.stop_list.index(bus_stop.id)) / float(len(otherbus.stop_list)),
+        #                            float(len(otherbus.onboard_list)) / otherbus.capacity, 0., 1.]
+        #
+        #     state = [state, com_oneway]
         if is_stop_embedding == 1:
             stop_embedding = self.stop_embedding(bus, bus_stop, d_model=len(state))
             state = (np.array(state) + stop_embedding * is_stop_embedding).reshape(-1, ).tolist()
-        # if self.control_type==7:
-        #     if len(self.GM.temp_memory[bus.id]['s']) > 2:
-        #         w = self.PW.weight_nn.get_weights(self.GM.temp_memory[bus.id]['s'][-3]).detach().numpy()
-        #     else:
-        #         w = [0.4, 0.6, 0.1]
-            # state+= [w[0], w[1], w[2]]
+        if self.control_type == 7:
+            if bus_stop.is_in_shared_corridor == 1:
+                w = self.APL.w_curr_mean
+                # w = self.APL.propose_w(w_curr=w)
+                state += [w[0], w[1], w[2]]
+            else:
+                w = self.APL2.w_curr_mean
+                # w = self.APL2.propose_w(w_curr=w)
+                state += [w[0], w[1], 0.]
 
-        if self.share_scale == 0 and is_com==0:
+        if self.share_scale == 0 and is_com == 0:
             if self.policy_types > 1:
                 if is_stop_embedding == 1:
                     action = np.array(
@@ -786,16 +765,15 @@ class Engine():
                 else:
                     action = np.array(self.agents[0].choose_action(np.array(state).reshape(-1, )))
 
-        if self.share_scale == 1 and self.agents[bus.route_id].is_com<1:
+        if self.share_scale == 1 and self.agents[bus.route_id].is_com < 1:
             if is_stop_embedding == 1:
                 action = np.array(
                     self.agents[bus.route_id].choose_action([np.array(state).reshape(-1, ), stop_embedding]))
             else:
                 action = np.array(self.agents[bus.route_id].choose_action(np.array(state).reshape(-1, )))
-        if is_com == 1 :
+        if is_com == 1:
             action = np.array(self.agents[0].choose_action(state))
         # action = action + np.random.normal(0,0.02)
-
         mark = list(np.array(state + list(action)).reshape(-1, ))
         self.bus_list[bus.id].his[current_interval] = mark
 
@@ -804,9 +782,9 @@ class Engine():
             # organize fingerprint: consider impact of other agent between two consecutive control of the ego agent
             stop_dist = [0.]
             bus_dist = [0.]
-            if is_com==1:
+            if is_com == 1:
                 fp = [self.GM.temp_memory[record_id]['s'][-1][0] + self.GM.temp_memory[record_id]['a'][
-                -1].tolist() + stop_dist + bus_dist + [0.] + [bus.id]]
+                    -1].tolist() + stop_dist + bus_dist + [0.] + [bus.id]]
             else:
                 fp = [self.GM.temp_memory[record_id]['s'][-1] + self.GM.temp_memory[record_id]['a'][
                     -1].tolist() + stop_dist + bus_dist + [0.] + [bus.id]]
@@ -828,9 +806,10 @@ class Engine():
                             stop_dist = [
                                 (bus.stop_list.index(bus.pass_stop[-2]) - bus.stop_list.index(bus_stop_id_)) / len(
                                     self.busstop_list)]
-                            if is_com==1:
-                                fp.append(self.bus_list[bus_id_].his[temp][0] +[self.bus_list[bus_id_].his[temp][-1]]+ stop_dist + bus_dist + [
-                                    abs(temp - current_interval)] + [bus_id_])
+                            if is_com == 1:
+                                fp.append(self.bus_list[bus_id_].his[temp][0] + [
+                                    self.bus_list[bus_id_].his[temp][-1]] + stop_dist + bus_dist + [
+                                              abs(temp - current_interval)] + [bus_id_])
                             else:
                                 fp.append(self.bus_list[bus_id_].his[temp] + stop_dist + bus_dist + [
                                     abs(temp - current_interval)] + [bus_id_])
@@ -855,7 +834,6 @@ class Engine():
                 self.GM.temp_memory[record_id]['r'].append(reward)
             self.GM.temp_memory[record_id]['fp'].append(fp)
 
-
         ## update temporal memory with current state and action and mark
         self.GM.temp_memory[record_id]['s'].append(state)
         self.GM.temp_memory[record_id]['a'].append(action)
@@ -866,126 +844,22 @@ class Engine():
             fp = self.GM.temp_memory[record_id]['fp'][-2]
             nfp = self.GM.temp_memory[record_id]['fp'][-1]
             a = self.GM.temp_memory[record_id]['a'][-3]
-            if self.control_type   == 7:
+            if self.control_type == 7:
                 r = [self.GM.temp_memory[record_id]['r1'][-2],
-                    self.GM.temp_memory[record_id]['r2'][-2],
-                    self.GM.temp_memory[record_id]['r3'][-2]]
+                     self.GM.temp_memory[record_id]['r2'][-2],
+                     self.GM.temp_memory[record_id]['r3'][-2]]
             else:
                 r = self.GM.temp_memory[record_id]['r'][-2]
             stop_embed = self.GM.temp_memory[record_id]['stop_embed'][-3]
             next_stop_embed = self.GM.temp_memory[record_id]['stop_embed'][-2]
             self.GM.remember(s, fp, a, r, ns, nfp, stop_embed, next_stop_embed, record_id)
-            if self.control_type==7:
-                self.PW.update(member_id=record_id, r1=np.array(reward1).reshape(-1,), r2=np.array(reward2).reshape(-1,),
-                               r3=np.array(reward3).reshape(-1,),
-                               s = np.array(s).reshape(-1,),
-                               a = np.array(a).reshape(-1,))
-                s_a = np.concatenate([np.array(s).reshape(-1,), np.array(a).reshape(-1,)]).reshape(-1,)
-                w = self.PW.weight_nn.get_weights(s_a).detach().numpy()
+            if self.control_type == 7:
                 if bus_stop.is_in_shared_corridor == 1:
-                    self.debug["1"].append(w[0])
-                    self.debug["2"].append(w[1])
-                    self.debug["3"].append(w[2])
+                    self.APL.update(member_id=record_id, r1=np.array(reward1).reshape(-1, ),
+                                    r2=np.array(reward2).reshape(-1, ), r3=np.array(reward3).reshape(-1, ))
                 else:
-                    self.debug["4"].append(w[0])
-                    self.debug["5"].append(w[1])
-                    self.debug["6"].append(w[2])
-        self.action_record.append(action)
-        action = np.clip(abs(action), 0., 3.)
-        self.bus_list[bus.id].last_vist_interval = current_interval
-        return 180. * action
-
-    def rl_control_2(self, bus, bus_stop, wait_num):
-        # retrive historical state
-
-        current_interval = self.simulation_step
-
-        if bus_stop.is_in_shared_corridor == 1:
-            state = self.augment_state_on_ml(bus, bus_stop)
-        else:
-            state = []
-
-        for record in self.arrivals[current_interval]:
-            bus_stop_id_ = record[0]
-            bus_id_ = record[1]
-            onboard = record[2]
-            if bus_id_ == bus.id:
-                state += [onboard / bus.capacity]
-                break
-
-        fh, bh = self.cal_headway(bus)
-
-        state += [min(fh / 600., 2.), min(bh / 600., 2.)]
-
-        if self.share_scale == 0:
-            action = np.array(self.agents[bus_stop.is_in_shared_corridor].choose_action(np.array(state).reshape(-1, )))
-        if self.share_scale == 1:
-            action = np.array(self.agents[bus.route_id].choose_action(np.array(state).reshape(-1, )))
-
-        mark = list(np.array(state + list(action)).reshape(-1, ))
-        self.bus_list[bus.id].his[current_interval] = mark
-
-        if self.policy_types > 1:
-            record_id = str(bus.id) + '_' + str(bus_stop.is_in_shared_corridor)
-        else:
-            record_id = bus.id
-
-        if len(self.GM.temp_memory[record_id]['a']) > 0:
-            # organize fingerprint: consider impact of other agent between two consecutive control of the ego agent
-            stop_dist = [0.]
-            bus_dist = [0.]
-
-            fp = [self.GM.temp_memory[record_id]['s'][-1] + self.GM.temp_memory[record_id]['a'][
-                -1].tolist() + stop_dist + bus_dist + [0.] + [bus.id]]
-            temp = bus.last_vist_interval
-
-            while temp <= current_interval:
-                if temp in self.arrivals:
-                    for record in self.arrivals[temp]:
-                        bus_stop_id_ = record[0]
-                        bus_id_ = record[1]
-                        onboard = record[2]
-                        # weak coopearation:  not include bus from other route
-                        if bus_id_ == bus.id or (self.bus_list[bus_id_].route_id != bus.route_id) or self.busstop_list[
-                            bus_stop_id_].is_in_shared_corridor != bus_stop.is_in_shared_corridor:
-                            continue
-                        if (bus_id_ == bus.forward_bus or bus_id_ == bus.backward_bus) or (self.all == 1):
-                            curr_bus = self.dispatch_times[bus.route_id].index(bus.dispatch_time)
-                            neigh_bus = self.dispatch_times[bus.route_id].index(self.bus_list[bus_id_].dispatch_time)
-                            bus_dist = [(curr_bus - neigh_bus) / len(self.bus_list)]
-                            stop_dist = [
-                                (bus.stop_list.index(bus.pass_stop[-2]) - bus.stop_list.index(bus_stop_id_)) / len(
-                                    self.busstop_list)]
-                            fp.append(self.bus_list[bus_id_].his[temp] + stop_dist + bus_dist + [
-                                abs(temp - current_interval)] + [bus_id_])
-
-                temp += 1
-
-            reward1, reward2, reward3, reward = self.reward_func(bus, bus_stop)
-
-            self.reward_record.append(reward)
-            self.reward_signal[bus.id].append(reward)
-            self.reward_signalp1[bus.id].append(reward1)
-            self.reward_signalp2[bus.id].append(reward2)
-            try:
-                self.reward_signalp3[bus.id].append(reward3)
-            except:
-                pass
-            self.GM.temp_memory[record_id]['r'].append(reward)
-            self.GM.temp_memory[record_id]['fp'].append(fp)
-
-        ## update temporal memory with current state and action and mark
-        self.GM.temp_memory[record_id]['s'].append(state)
-        self.GM.temp_memory[record_id]['a'].append(action)
-
-        if len(self.GM.temp_memory[record_id]['s']) > 2:
-            s = self.GM.temp_memory[record_id]['s'][-3]
-            ns = self.GM.temp_memory[record_id]['s'][-2]
-            fp = self.GM.temp_memory[record_id]['fp'][-2]
-            nfp = self.GM.temp_memory[record_id]['fp'][-1]
-            a = self.GM.temp_memory[record_id]['a'][-3]
-            r = self.GM.temp_memory[record_id]['r'][-2]
-            self.GM.remember(s, fp, a, r, ns, nfp, 0, record_id)
+                    self.APL2.update(member_id=record_id, r1=np.array(reward1).reshape(-1, ),
+                                    r2=np.array(reward2).reshape(-1, ), r3=np.array(0.).reshape(-1, ))
         self.action_record.append(action)
         action = np.clip(abs(action), 0., 3.)
         self.bus_list[bus.id].last_vist_interval = current_interval
@@ -1055,8 +929,8 @@ class Engine():
                 for rid, r in self.route_list.items():
                     b = np.random.randint(1, len(r.bus_list) - 1)
                     bus_id = r.bus_list[b]
-                    if self.control_type==7:
-                        ploss, qloss = self.agents[0].learn(self.GM.memory[bus_id], bus_id=bus_id, weight_learner=self.PW)
+                    if self.control_type == 7:
+                        ploss, qloss = self.agents[0].learn(self.GM.memory[bus_id], bus_id=bus_id, )
                     else:
                         ploss, qloss = self.agents[0].learn(self.GM.memory[bus_id], bus_id=bus_id)
                     # self.GM.memory[bus_id].clear()
@@ -1117,12 +991,11 @@ class Engine():
                     ploss_set.append(ploss)
                     qloss_set.append(qloss)
 
-        if len(ploss_set) > 0 and len(self.reward_signal) > 0:
+        if np.mean(ploss_set) != 0 and len(self.reward_signal) > 0:
 
             return np.mean(ploss_set), np.mean(qloss_set), True
         else:
             return 0, 0, False
-
 
     def augment_state_on_ml(self, bus, bus_stop):
         ag_state = [2. for _ in range(2)]
@@ -1138,12 +1011,15 @@ class Engine():
                     prebus = prebus.backward_bus
             if rid in bus_stop.dep_log and len(bus_stop.dep_log[rid]) > 0:
                 ag_state[1] = min(ag_state[1], (
-                            self.bus_list[bus_stop.dep_log[rid][-1][0]].loc[-1] - bus_stop.loc_route[
-                        rid]) / bus.c_speed / 600.)
+                        self.bus_list[bus_stop.dep_log[rid][-1][0]].loc[-1] - bus_stop.loc_route[
+                    rid]) / bus.c_speed / 600.)
         # print(ag_state)
         return ag_state
 
     def reward_func(self, bus, bus_stop):
+        # if self.policy_types > 1:
+        #     record_id = str(bus.id) + '_' + str(bus_stop.is_in_shared_corridor)
+        # else:
         record_id = bus.id
 
         reward3 = 0.
@@ -1153,8 +1029,8 @@ class Engine():
 
         if bus_stop.is_in_shared_corridor == 1:
             # 714
-            nearest_front = 100000000
-            nearest_back = 100000000
+            nearest_front = 1000000000
+            nearest_back = 1000000000
             other_route = None
             for r in bus_stop.routes:
                 if r != bus.route_id:
@@ -1165,9 +1041,10 @@ class Engine():
                         nearest_front = (other_bus.loc[-1] - bus.loc[-1])
                     if other_bus.loc[-1] < bus.loc[-1] and (bus.loc[-1] - other_bus.loc[-1]) < nearest_back:
                         nearest_back = (bus.loc[-1] - other_bus.loc[-1])
-            reward3 = np.exp((-abs(nearest_front - nearest_back)))*10
-            if nearest_back==100000000 or nearest_front==100000000:
+            if nearest_front == 1000000000 or nearest_back == 1000000000:
                 reward3 = 0.
+            else:
+                reward3 = np.exp((-abs(nearest_front - nearest_back)))
             # middles = []
             # for rid in list(bus_stop.arr_log.keys()):
             #     if len(bus_stop.arr_log[rid]) > 1:
@@ -1183,16 +1060,27 @@ class Engine():
         # self.debug["3"].append(reward3)
 
         if self.control_type < 5:
+            assert 1 == 0, "control <7 should be tested using Sim_Engine"
             reward = reward1 * (1 - self.weight) + reward2 * self.weight
         elif self.control_type < 7:
-            if bus_stop.is_in_shared_corridor==1:
-                reward = reward1 * (1 - self.weight) + reward2 * (self.weight-0.1) + reward3*0.1
-            else:
-                reward = reward1 * (1 - self.weight - 0.) + reward2 * self.weight
+            assert 1 == 0, "control <7 should be tested using Sim_Engine"
+            reward = reward1 * (1 - self.weight) + reward2 * self.weight + reward3
         else:
-            assert 1==0, "control 7 should be tested using Sim_Engine_AW"
+            if bus_stop.is_in_shared_corridor != 1:
+                w = self.APL2.w_curr_mean
+                self.debug["4"].append(w[0])
+                self.debug["5"].append(w[1])
+                self.debug["6"].append(0.)
+            else:
+                w = self.APL.w_curr_mean
+                self.debug["1"].append(w[0])
+                self.debug["2"].append(w[1])
+                self.debug["3"].append(w[2])
+            try:
+                reward = w[0] * reward1 + reward2 * w[1] + reward3 * w[2]
+            except:
+                reward = w[0] * reward1 + reward2 * w[1] + reward3 * 0.
         return reward1, reward2, reward3, reward
-
 
     def stop_embedding(self, bus, stop, d_model):
         position = np.arange(0, len(bus.stop_list))[:, None]

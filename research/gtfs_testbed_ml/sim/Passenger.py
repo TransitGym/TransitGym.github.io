@@ -40,3 +40,4 @@ class Passenger():
         self.onroad_cost=0
         self.miss=0
         self.born = 0
+        self.encounter = 0.
